@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import glob
+import os
 
 # Safety-science.netcdf_cap
 # Date: 2018/02/24
