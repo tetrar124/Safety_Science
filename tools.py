@@ -203,10 +203,15 @@ class tools(object):
         import seaborn as sns
         sns.set(style="darkgrid")
         #kmeans比較
-        # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\k-means.csv",engine='python')
+        # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\k-means.csv",engine='python')
         # dfExtract = df.iloc[:,1:6]
         # fig = plt.figure()
         # axes = fig.subplots(ncols=5, nrows=1)
+        #Ward比較
+        df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\ward.csv",engine='python')
+        dfExtract = df.iloc[:,1:6]
+        fig = plt.figure()
+        axes = fig.subplots(ncols=5, nrows=1)
         # SSE比較
         # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\SSE.csv",engine='python')
         # dfExtract = df.iloc[:,1:4]
@@ -217,11 +222,16 @@ class tools(object):
         # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\2clusterNo.csv",engine='python')
         # similalyty
         #df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\simi.csv",engine='python')
-        # DBSCAN, Meanshift
-        df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\DBSCANMeanShift.csv",engine='python')
-        # spectral louvain
-        df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\louvain.csv",engine='python')
-        dfExtract = df.iloc[:,1:4]
+        # # DBSCAN, Meanshift
+        # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\DBSCANMeanShift.csv",engine='python')
+        # # spectral louvain
+        # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\louvain.csv",engine='python')
+        # dfExtract = df.iloc[:,1:4]
+        # fig = plt.figure()
+        # axes = fig.subplots(ncols=2, nrows=1)
+        #Ward比較
+        df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\diff.csv",engine='python')
+        dfExtract = df.iloc[:,1:3]
         fig = plt.figure()
         axes = fig.subplots(ncols=2, nrows=1)
         fig.subplots_adjust(wspace=0.2)
@@ -269,9 +279,9 @@ class tools(object):
             elif colName == 'Spectral Clustering':
                 ax.set_xlabel('Number of Clusters')
                 ax.set_xlim(0,100)
-                ma_10 = dfExtract[colName].rolling(window=10).mean()
-                ma = ax.plot(df.iloc[:,0],ma_10,color="red", label="10MA",linewidth =0.8)
-                ax.legend(loc="lower right")
+                #ma_10 = dfExtract[colName].rolling(window=10).mean()
+                #ma = ax.plot(df.iloc[:,0],ma_10,color="red", label="10MA",linewidth =0.8)
+                #ax.legend(loc="lower right")
             elif colName == 'Weight average Tanimoto':
                 ma_5 = dfExtract[colName].rolling(window=5).mean()
                 ma5 = ax.plot(df.iloc[:,0],ma_5,color='red', label="5MA",linewidth =0.6)
@@ -305,11 +315,10 @@ class tools(object):
                 ymin = -3000
                 ymax = 6000
             elif dfExtract[colName].max() >0:
-                ymin = -3000
-                #ymin = 0
-                #ymax = 6000
-                ymax = round(dfExtract[colName].max() +dfExtract[colName].max()/10,-2)
-
+                #ymin = -3000
+                ymin = 0
+                ymax = 1
+                #ymax = round(dfExtract[colName].max() +dfExtract[colName].max()/10,-2)
             else:
                 ymin = -20000
                 ymax = round(dfExtract[colName].max() -dfExtract[colName].max()/10,-3)
@@ -322,8 +331,45 @@ class tools(object):
             #ax.xlabel("Number of Cluster", fontsize=10)
             ymax=None
             ymin=None
-        #fig.text(0.5, 0.03, 'Number of Clusters', ha='center', va='center', fontsize=15)
-        fig.text(0.09, 0.5, 'Score', ha='center', va='center', rotation='vertical', fontsize=15)
+        fig.text(0.5, 0.03, 'Number of Clusters', ha='center', va='center', fontsize=15)
+        #fig.text(0.09, 0.5, 'Score', ha='center', va='center', rotation='vertical', fontsize=15)
+        plt.show()
+    def timeGraphForarticle(self):
+        import pandas as pd
+        import pylab as plt
+        import seaborn as sns
+        sns.set(style="darkgrid")
+        #kmeans比較
+        df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\time.csv",engine='python',encoding='shift-jis')
+        fig = plt.figure()
+        axes = fig.subplots(ncols=6, nrows=1)
+        fig.subplots_adjust(wspace=0.2)
+        #clusters
+        clusterDf = df.iloc[:, 0:5]
+        clusterDf = clusterDf.set_index('The Number of clusters')
+        clusterDf1 = clusterDf.iloc[:, 0:1]
+        clusterDf2 = clusterDf.iloc[:, 1:3]
+        clusterDf3 = clusterDf.iloc[:, 3:4]
+        #meanshift
+        MeanShiftDf =  df.iloc[:, 5:7]
+        MeanShiftDf = MeanShiftDf.set_index('window size(bandwith)')
+        #Louvain
+        LouvainDf =  df.iloc[:, 7:9]
+        LouvainDf = LouvainDf.set_index('Threshold(Tanimoto coefficient)')
+        #DBSCAN
+        DBSCANdf =  df.iloc[:, 9:11]
+        DBSCANdf = DBSCANdf.set_index('Eps-neighborhood of a point')
+
+        clusterDf1.plot(ax=axes[0])
+        clusterDf2.plot(ax=axes[1])
+        axes[1].legend(loc="upper left")
+        clusterDf3.plot(ax=axes[2])
+        MeanShiftDf.plot(ax = axes[3])
+        DBSCANdf.plot(ax = axes[4])
+        LouvainDf.plot(ax = axes[5])
+        for axe in axes:
+            axe.set_xlim(left = 0)
+        fig.text(0.1, 0.5, 'Time [s]', ha='center', va='center', rotation='vertical', fontsize=15)
         plt.show()
 
 if __name__ == '__main__':

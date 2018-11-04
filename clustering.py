@@ -442,7 +442,7 @@ if __name__ == '__main__':
     #for method in ['louvain']:
     #for method in ['kmeans']:
     #for method in ['DBSCAN']:
-    for method in ['spectral']:
+    for method in ['HAC']:
     #for method in ['GMM','louvain','spectral','kmeans','HAC','DBSCAN','meanshift']:
     #for method in ['HAC','GMM']:
         # 68.2percentile(1σ)
@@ -452,8 +452,9 @@ if __name__ == '__main__':
         # 99.7percentile(3σ）
         # threshold = 0.738
         #threshold = 0.5
-        #for threshold in [0.426,0.738,0.5,0.214]:
-        for threshold in [0.426]:
+        #for threshold in [0.426,0.738,0.5,0.6,0.214]:
+        for threshold in [0.5,0.6,0.214]:
+        #for threshold in [0.426]:
         #for threshold in [0.738,0.5,0.214]:
             tanimotoMax = - np.inf
             tempMaxDf = None
