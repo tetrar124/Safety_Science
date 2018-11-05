@@ -208,10 +208,10 @@ class tools(object):
         # fig = plt.figure()
         # axes = fig.subplots(ncols=5, nrows=1)
         #Ward比較
-        df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\ward.csv",engine='python')
-        dfExtract = df.iloc[:,1:6]
-        fig = plt.figure()
-        axes = fig.subplots(ncols=5, nrows=1)
+        # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\ward.csv",engine='python')
+        # dfExtract = df.iloc[:,1:6]
+        # fig = plt.figure()
+        # axes = fig.subplots(ncols=5, nrows=1)
         # SSE比較
         # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\SSE.csv",engine='python')
         # dfExtract = df.iloc[:,1:4]
@@ -223,15 +223,15 @@ class tools(object):
         # similalyty
         #df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\simi.csv",engine='python')
         # # DBSCAN, Meanshift
-        # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\DBSCANMeanShift.csv",engine='python')
+        df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\DBSCANMeanShift.csv",engine='python')
         # # spectral louvain
         # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\louvain.csv",engine='python')
         # dfExtract = df.iloc[:,1:4]
         # fig = plt.figure()
         # axes = fig.subplots(ncols=2, nrows=1)
         #Ward比較
-        df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\diff.csv",engine='python')
-        dfExtract = df.iloc[:,1:3]
+        # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\diff.csv",engine='python')
+        dfExtract = df.iloc[:,1:5]
         fig = plt.figure()
         axes = fig.subplots(ncols=2, nrows=1)
         fig.subplots_adjust(wspace=0.2)
@@ -251,7 +251,7 @@ class tools(object):
             elif colName=='Mean Shift':
                 ax.scatter(x=df['bandwith'], y=dfExtract[colName], s=3, label=None)
                 ax.plot(df['bandwith'],dfExtract[colName], linestyle='dashdot',label=None,linewidth=0.5)
-            if colName=='Spectral Clustering':
+            elif colName=='Spectral Clustering':
                 ax.scatter(x=df.iloc[:, 0], y=dfExtract[colName], s=3, label=None)
             elif colName=='improved Louvain method':
                 ax.scatter(x=df['Threshold(Tanimoto coefficient)'], y=dfExtract[colName], s=3, label=None)
@@ -315,10 +315,10 @@ class tools(object):
                 ymin = -3000
                 ymax = 6000
             elif dfExtract[colName].max() >0:
-                #ymin = -3000
-                ymin = 0
-                ymax = 1
-                #ymax = round(dfExtract[colName].max() +dfExtract[colName].max()/10,-2)
+                ymin = -3000
+                #ymin = 0
+                #ymax = 1
+                ymax = round(dfExtract[colName].max() +dfExtract[colName].max()/10,-2)
             else:
                 ymin = -20000
                 ymax = round(dfExtract[colName].max() -dfExtract[colName].max()/10,-3)
@@ -331,8 +331,8 @@ class tools(object):
             #ax.xlabel("Number of Cluster", fontsize=10)
             ymax=None
             ymin=None
-        fig.text(0.5, 0.03, 'Number of Clusters', ha='center', va='center', fontsize=15)
-        #fig.text(0.09, 0.5, 'Score', ha='center', va='center', rotation='vertical', fontsize=15)
+        #fig.text(0.5, 0.03, 'Number of Clusters', ha='center', va='center', fontsize=15)
+        fig.text(0.09, 0.5, 'Score', ha='center', va='center', rotation='vertical', fontsize=15)
         plt.show()
     def timeGraphForarticle(self):
         import pandas as pd
