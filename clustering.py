@@ -442,7 +442,8 @@ if __name__ == '__main__':
     #for method in ['louvain']:
     #for method in ['kmeans']:
     #for method in ['DBSCAN']:
-    for method in ['HAC']:
+    #for method in ['HAC']:
+    for method in ['spectral']:
     #for method in ['GMM','louvain','spectral','kmeans','HAC','DBSCAN','meanshift']:
     #for method in ['HAC','GMM']:
         # 68.2percentile(1σ)
@@ -522,13 +523,15 @@ if __name__ == '__main__':
                     tempMaxDf = df
                     tempClusterNum = cluster
             os.chdir("G:\\マイドライブ\\Data\\tox_predict\\result\\newMethod")
+            t = datetime.datetime.now()
+            timestamp = str(t.year) + str(t.month) + str(t.day) + str(t.hour) + str(t.minute)
             tanimotoChangeCsv = str(method) + '_' + 'shre_' + str(threshold) + '_tanimotoChange.csv'
             if len(SSEs) !=0:
                 tempDf = pd.DataFrame({'cluster':cluster_change,'checkValues':tanimotoChange,'calcTime':times,'SSE':SSEs,'silhouettes':silhouettes,'substances':substances})
                 tempDf.to_csv(tanimotoChangeCsv, sep=',', index=False)
             elif median != None:
                 tempDf = pd.DataFrame({'cluster': cluster_change,'Score': tanimotoChange,'Weight average Tanimoto':weightMean,'Tanimoto Median':medians,'substances': substances,'calcTime':times})
-                tanimotoChangeCsv = str(method) + '_' + 'shre_' + str(threshold) + '_tanimotoChange.csv'
+                tanimotoChangeCsv = str(method) + '_' + 'shre_' + str(threshold) + '_tanimotoChange' + timestamp + '.csv'
                 tempDf.to_csv(tanimotoChangeCsv, sep=',',index = False)
                 print('now saving')
             resultCSV = str(method) + '_' + str(tanimotoMax) +'_' + str(tempClusterNum) +'_'+'th'+str(threshold)+ '.csv'
