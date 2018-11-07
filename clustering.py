@@ -534,5 +534,5 @@ if __name__ == '__main__':
                 tanimotoChangeCsv = str(method) + '_' + 'shre_' + str(threshold) + '_tanimotoChange' + timestamp + '.csv'
                 tempDf.to_csv(tanimotoChangeCsv, sep=',',index = False)
                 print('now saving')
-            resultCSV = str(method) + '_' + str(tanimotoMax) +'_' + str(tempClusterNum) +'_'+'th'+str(threshold)+ '.csv'
+            resultCSV = str(method) + '_' + str(round(tanimotoMax)) +'_' + str(tempClusterNum) +'_'+'th'+str(threshold)+ '.csv'
             tempMaxDf.to_csv(resultCSV, sep=',',index = False)

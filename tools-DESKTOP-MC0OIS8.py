@@ -375,49 +375,19 @@ class tools(object):
         import pandas as pd
         import pylab as plt
         import seaborn as sns
-        import numpy as np
-        #sns.set(style="darkgrid")
+        sns.set(style="darkgrid")
         df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\louvainDetail.csv",engine='python',encoding='shift-jis')
-        df = df.set_index('Threshold(Tanimoto similarity)')
+        df.set_index('Threshold(Tanimoto similarity)')
         fig = plt.figure()
-        axes = fig.subplots(ncols=3, nrows=1)
-        fig.subplots_adjust(left=0.1, right=0.9, top=1, bottom=0.1,wspace=0.4)
-        dfScore = df.iloc[:,[0]]
-        dfTime = df.iloc[:,[1]]
-        dfClusterNum = df.iloc[:,[2]]
-        dfSubstances = df.iloc[:,[3]]
-        dfWeight =df.iloc[:,[4]]
-        dfMedian =df.iloc[:,[5]]
-        dfScore.plot(ax=axes[0],legend=None)
-        dfSubstances.plot(ax=axes[1],legend=None)
-        dfWeight.plot(ax=axes[2],legend=None)
-
-        ax1 = axes[0].twinx()
-        ax2 = axes[1].twinx()
-        ax3 = axes[2].twinx()
-        #ax1.set_yticks(np.linspace(ax1.get_yticks()[0], ax1.get_yticks()[-1], len(axes[0].get_yticks())))
-        #ax2.set_yticks(np.linspace(ax2.get_yticks()[0], ax2.get_yticks()[-1], len(axes[1].get_yticks())))
-        dfTime.plot(ax=ax1,color='red')
-        dfClusterNum.plot(ax=ax2,color='red')
-        dfMedian.plot(ax=ax3,color='red')
-        h1, l1 = axes[0].get_legend_handles_labels()
-        h2, l2 = ax1.get_legend_handles_labels()
-        h3, l3 = axes[1].get_legend_handles_labels()
-        h4, l4 = ax2.get_legend_handles_labels()
-        h5, l5 = axes[2].get_legend_handles_labels()
-        h6, l6 = ax3.get_legend_handles_labels()
-        ax1.legend(h1 + h2, l1 + l2,loc='center right')
-        ax2.legend(h3 + h4, l3 + l4,loc='center left')
-        ax3.legend(h5 + h6, l5 + l6)
-        axes[0].set_xlabel('Threshold(Tanimoto similarity)')
-        axes[1].set_xlabel('Threshold(Tanimoto similarity)')
-        axes[2].set_xlabel('Threshold(Tanimoto similarity)')
-        axes[0].set_ylabel('score')
-        ax1.set_ylabel('The calculation time[s]')
-        axes[1].set_ylabel('chemical substances')
-        ax2.set_ylabel('The number of clusters')
-        axes[2].set_ylabel('Tanimoto similarity(Weight Average)')
-        ax3.set_ylabel('Tanimoto similarity(Median)')
+        axes = fig.subplots(ncols=2, nrows=1)
+        fig.subplots_adjust(wspace=0.2)
+        dfScore = df.iloc[:,[1]]
+        dfTime = df.iloc[:,[2]]
+        dfClusterNum = df.iloc[:,[3]]
+        dfScore.plot(ax=axes[0])
+        dfScore.plot(ax=axes[1])
+        dfTime.plot(ax=axes[0])
+        dfClusterNum.plot(ax=axes[1])
         plt.show()
 
 
