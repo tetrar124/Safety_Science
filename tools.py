@@ -208,33 +208,32 @@ class tools(object):
         # fig = plt.figure()
         # axes = fig.subplots(ncols=5, nrows=1)
         #Ward比較
-        # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\ward.csv",engine='python')
+        #f = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\ward.csv",engine='python')
         # dfExtract = df.iloc[:,1:6]
         # fig = plt.figure()
         # axes = fig.subplots(ncols=5, nrows=1)
         # SSE比較
-        # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\SSE.csv",engine='python')
+        #df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\SSE.csv",engine='python')
         # dfExtract = df.iloc[:,1:4]
         # BIC比較
-        # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\BIC.csv",engine='python')
+        #df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\BIC.csv",engine='python')
         # dfExtract = df.iloc[:,1:4]
         # k-means,GMM,Ward
-        # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\2clusterNo.csv",engine='python')
+        #df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\2clusterNo.csv",engine='python')
         # similalyty
         #df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\simi.csv",engine='python')
         # # DBSCAN, Meanshift
         #df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\DBSCANMeanShift.csv",engine='python')
-        # # spectral louvain
+         # spectral louvain
         df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\louvain.csv",engine='python')
         # dfExtract = df.iloc[:,1:4]
         # fig = plt.figure()
         # axes = fig.subplots(ncols=2, nrows=1)
         #Ward比較
         # df = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\newMethod\価値関数と他の手法比較\diff.csv",engine='python')
-        dfExtract = df.iloc[:,1:5]
+        dfExtract = df.iloc[:,1:9]
         fig = plt.figure()
         axes = fig.subplots(ncols=2, nrows=1)
-        fig.subplots_adjust(wspace=0.2)
         colNames =dfExtract.columns.tolist()
         try:
             colNames.remove('bandwith')
@@ -278,10 +277,10 @@ class tools(object):
                 ax.set_xlabel('Threshold(Tanimoto coefficient)')
             elif colName == 'Spectral Clustering':
                 ax.set_xlabel('Number of Clusters')
-                ax.set_xlim(0,100)
-                #ma_10 = dfExtract[colName].rolling(window=10).mean()
-                #ma = ax.plot(df.iloc[:,0],ma_10,color="red", label="10MA",linewidth =0.8)
-                #ax.legend(loc="lower right")
+                #ax.set_xlim(0,100)
+                ma_10 = dfExtract[colName].rolling(window=10).mean()
+                ma = ax.plot(df.iloc[:,0],ma_10,color="red", label="10MA",linewidth =0.8)
+                ax.legend(loc="lower right")
             elif colName == 'Weight average Tanimoto':
                 ma_5 = dfExtract[colName].rolling(window=5).mean()
                 ma5 = ax.plot(df.iloc[:,0],ma_5,color='red', label="5MA",linewidth =0.6)
@@ -298,7 +297,6 @@ class tools(object):
                 ma_5 = dfExtract[colName].rolling(window=10).mean()
                 ma = ax.plot(df.iloc[:,0],ma_5,color="red", label="10MA",linewidth =0.8)
                 ax.legend(loc="lower right")
-            ax.axis('tight')
             if colName == 'Silhouette':
                 #pass
                 ymin = 0
@@ -312,13 +310,14 @@ class tools(object):
                 ymin = -0.06
                 ymax = 0.06
             elif colName == 'DBSCAN':
-                ymin = -3000
-                ymax = 6000
+                ymin = -1000
+                ymax = 3000
             elif dfExtract[colName].max() >0:
-                ymin = -3000
+                ymin = -1000
                 #ymin = 0
-                #ymax = 1
+                #ymax = 6000
                 ymax = round(dfExtract[colName].max() +dfExtract[colName].max()/10,-2)
+                #ymax = round(dfExtract[colName].max() ,-2)
             else:
                 ymin = -20000
                 ymax = round(dfExtract[colName].max() -dfExtract[colName].max()/10,-3)
@@ -326,13 +325,14 @@ class tools(object):
             ax.set_ylim(bottom = ymin,top =ymax )
             ax.set_xlim(left = 0)
             #ax.set_ylim(top =ymax )
-            ax.tick_params(axis='y',labelsize=6,pad=-1)
-            ax.tick_params(axis='x',labelsize=10,pad=-1)
+            ax.tick_params(axis='y',labelsize=6,pad=1)
+            ax.tick_params(axis='x',labelsize=10,pad=1)
             #ax.xlabel("Number of Cluster", fontsize=10)
             ymax=None
             ymin=None
-        #fig.text(0.5, 0.03, 'Number of Clusters', ha='center', va='center', fontsize=15)
-        fig.text(0.09, 0.5, 'Score', ha='center', va='center', rotation='vertical', fontsize=15)
+        #fig.text(0.5, 0.05, 'Number of Clusters', ha='center', va='center', fontsize=15)
+        fig.subplots_adjust(left=0.08, right=0.95,bottom=0.15,wspace=0.2)
+        fig.text(0.05, 0.5, 'Score', ha='center', va='center', rotation='vertical', fontsize=15)
         plt.show()
     def timeGraphForarticle(self):
         import pandas as pd
@@ -381,7 +381,6 @@ class tools(object):
         df = df.set_index('Threshold(Tanimoto similarity)')
         fig = plt.figure()
         axes = fig.subplots(ncols=3, nrows=1)
-        fig.subplots_adjust(left=0.1, right=0.9, top=1, bottom=0.1,wspace=0.4)
         dfScore = df.iloc[:,[0]]
         dfTime = df.iloc[:,[1]]
         dfClusterNum = df.iloc[:,[2]]
@@ -418,6 +417,7 @@ class tools(object):
         ax2.set_ylabel('The number of clusters')
         axes[2].set_ylabel('Tanimoto similarity(Weight Average)')
         ax3.set_ylabel('Tanimoto similarity(Median)')
+        fig.subplots_adjust(left=0.08, right=0.95,top=1 ,bottom=0.1,wspace=0.4)
         plt.show()
 
 
