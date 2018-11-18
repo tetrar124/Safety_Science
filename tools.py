@@ -419,6 +419,86 @@ class tools(object):
         ax3.set_ylabel('Tanimoto similarity(Median)')
         fig.subplots_adjust(left=0.08, right=0.95,top=1 ,bottom=0.1,wspace=0.4)
         plt.show()
+    def testEdgeColor(self):
+        from networkx import *
+        import matplotlib.pyplot as plt
+        G = Graph()
+        G.add_node(1)
+        # Need to specify a layout when calling the draw functions below
+        # spring_layout is the default layout used within networkx (e.g. by `draw`)
+        pos = spring_layout(G)
+        nodes = draw_networkx_nodes(G, pos)
+        # Set edge color to red
+        nodes.set_edgecolor('g')
+        draw_networkx_edges(G, pos)
+        # Uncomment this if you want your labels
+        ## draw_networkx_labels(G, pos)
+        plt.show()
+    def verhaarClassifer(self):
+        compound = AtomAndStrcuture
+        if compound is not organic:
+            return 'otherClass'
+        elif compound has not C,H,N,O,S,halogen:
+            return  'otherClass'
+        elif logP > 6 :
+            return  'otherClass'
+        elif MW > 600:
+            return  'otherClass'
+        #Class1(narcosis or baseline toxicity)
+        if compound has iodine:
+            pass
+        elif compound has ionic group :
+            pass
+        elif compound has only H,C:
+            return  'class1 narcosis or baseline toxicity'
+        elif compound has only H,C,halogen:
+            if compounds is acylic:
+                if compound has halogen at B-positions from unsaturations:
+                    pass
+                else:
+                    return 'class1 narcosis or baseline toxicity'
+            elif compounds is mononyclic:
+                if compound has halogens on monocyclic:
+                    return 'class1 narcosis or baseline toxicity'
+                elif compound has only H on monocyclic:
+                    return 'class1 narcosis or baseline toxicity'
+                elif compound has acylic on monocyclic or polycyclic:
+                    if compound has halogen at B-positions from unsaturations:
+                        pass
+                    else:
+                        return 'class1 narcosis or baseline toxicity'
+        elif compound contain C,H,O:
+        #ethers,alcohols,ketones
+            if compound is benzylic alcohols or phenols:
+                pass
+            elif compound is epoxides or peroxides:
+                pass
+            elif compound is allylic or propargylic alcohols:
+                pass
+            elif compound is ab-unsaturated ketones:
+                pass
+            elif compound is 1-butenone or acetophenone:
+                pass
+        elif compound contain C,H,N:
+            if compound is aliphatic secondary or tertiary amines:
+                return 'class1 narcosis or baseline toxicity'
+        elif compound contain C,H,O ,halogen:
+            # ethers,alcohols,ketones
+            if compound is benzylic alcohols or phenols:
+                pass
+            elif compound is epoxides or peroxides:
+                pass
+            elif compound is allylic or propargylic alcohols:
+                pass
+            elif compound is ab - unsaturated ketones:
+                pass
+            elif compound is 1 - butenone or acetophenone:
+                pass
+            elif compound is a or b halogen-substituted compounds:
+                pass
+        elif compound is more toxic than others:
+            pass
+
 
 
 
