@@ -801,19 +801,20 @@ class testCluster(object):
              ((df['栄養段階'] == 'ミジンコ類') & (df['暴露時間（日）']  <= 2))|\
              ((df['栄養段階'] == '藻類') & (df['暴露時間（日）'] <= 4))]
         df2.to_csv('G:\\マイドライブ\\Data\\tox_predict\\all_data\\allDataAcute.csv', index=False)
+        df= pd.read_csv('G:\\マイドライブ\\Data\\tox_predict\\all_data\\allDataAcute.csv',engine='python')
         CAS = df['CAS'].unique()
         over20casList =[]
         for cas in CAS:
-            if df2[df2['CAS'] == cas].shape[0] >=20:
+            if df[df['CAS'] == cas].shape[0] >=20:
                 over20casList.append(cas)
         import random
         randomChoice = random.sample(over20casList,20)
 
     def toRMSE(self):
+        df = pd.read_clipboard()
         tempdf = df[['CAS No.','Chemical substance','Type','Tox value [mg/L]']]
-        rmse = tempdf.pivot(index='CAS No.', columns='Type', values='Tox val')
+        rmse = df.pivot(index='CAS No.', columns='Type', values='Tox val')
         rmse.to_csv('G:\\マイドライブ\\Data\\tox_predict\\all_data\\RMSE.csv')
-
 
 if __name__ == '__main__':
     os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
