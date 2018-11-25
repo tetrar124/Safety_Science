@@ -15,6 +15,10 @@ class tools(object):
         self.__EXE_PATH = sys.executable
         self.__ENV_PATH = os.path.dirname(self.__EXE_PATH)
         self.__LOG = os.path.join(self.__ENV_PATH, 'log')
+    def getcsv(self):
+        os.chdir(r'G:\マイドライブ\Data\tox_predict\all_data\allPictures')
+        files = [os.path.abspath(p) for p in glob.glob('*.png')]
+        cas = [p.replace('.png','') for p in glob.glob('*.png')]
 
     def main(self):
         os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
