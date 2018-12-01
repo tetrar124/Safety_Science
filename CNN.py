@@ -5,13 +5,17 @@ import os
 import sys
 import pandas as pd
 import tensorflow as tf
-
+from tensorflow.keras.preprocessing.image import load_img,img_to_array
 import numpy as np
-import opencv
 from rdkit.Chem import AllChem
 from rdkit import Chem
 import pylab as plt
 from rdkit.Chem import Draw
+from rdkit.Chem import rdDepictor
+from rdkit.Chem.Draw import rdMolDraw2D
+from IPython.display import SVG
+from rdkit.Chem.Draw import rdMolDraw2D
+import cairosvg
 
 tf.enable_eager_execution()
 
@@ -23,7 +27,7 @@ class CNN(object):
         self.__ENV_PATH = os.path.dirname(self.__EXE_PATH)
         self.__LOG = os.path.join(self.__ENV_PATH, 'log')
 
-    def makeCAStoPictures(self,df,strcture=None):
+    def makeCAStoPictures(self,df=None,strcture=None):
         os.chdir(r'G:\マイドライブ\Data\tox_predict\all_data')
         if strcture is None:
             strctureDf =pd.read_csv('G:\\マイドライブ\Data\\tox_predict\\all_data\\structure_result.csv',engine='python')
@@ -34,12 +38,28 @@ class CNN(object):
         except:
             pass
         extract = zip(df['CAS'],df['canonical_smiles'])
+        CAS =df['CAS'][0],
+        smiles =df['canonical_smiles'][0]
         for CAS, smiles in extract:
             try:
                 m = Chem.MolFromSmiles(smiles)
-                AllChem.Compute2DCoords(m)
+                #AllChem.Compute2DCoords(m)
                 name = '.\\allPictures\\' + str(CAS) + '.png'
-                Draw.MolToFile(m, name)
+                #Draw.MolToFile(m, name)
+                rdDepictor.Compute2DCoords(m)
+                mc = Chem.Mol(m.ToBinary())
+                Chem.Kekulize(mc)
+                #mh = Chem.AddHs(m)
+                drawer = rdMolDraw2D.MolDraw2DSVG(200, 200)
+                drawer.SetFontSize(0.8)
+                drawer.DrawMolecule(mc)
+                drawer.FinishDrawing()
+                svg = drawer.GetDrawingText()
+                SVG(svg.replace('svg:', ''))
+                fw = open("out.svg", "w")
+                fw.write(svg)
+                fw.close()
+                cairosvg.svg2png(url='out.svg', write_to=name)
             except:
                 #     print("pass1")
                 pass
@@ -76,12 +96,24 @@ class CNN(object):
         filepath = "000.png"
         with open(filepath, 'wb') as fd:
             fd.write(sample)
+    def rgb2Gray(self):
+        os.chdir(r"G:\マイドライブ\Data\tox_predict\all_data\allPicturesSvg")
+        
+        import cv2
+        import glob
+        try:
+            os.mkdir('allPicGray')
+        for name in glob.glob('*.png'):
+            temp = cv2.imread(name,0)
+            name2  = '.\\allPicGray\\' +name
+            cv2.imwrite(name2,temp)
 
-    sess = tf.Session()
-    init = tf.initialize_all_variables()
-    sess.run(tf.global_variables_initializer())
-    tf.train.start_queue_runners(sess)
-    x = sess.run(output)
+
+    # sess = tf.Session()
+    # init = tf.initialize_all_variables()
+    # sess.run(tf.global_variables_initializer())
+    # tf.train.start_queue_runners(sess)
+    # x = sess.run(output)
 
     def main(self):
         os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
@@ -89,4 +121,5 @@ class CNN(object):
 
 
 if __name__ == '__main__':
-    main()
+    cnn=CNN()
+    cnn.makeCAStoPictures()
