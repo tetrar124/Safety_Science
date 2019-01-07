@@ -14,21 +14,19 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 tf.enable_eager_execution()
-from keras.models import Sequential
-from keras.layers.convolutional import Conv2D
-from keras.layers.pooling import MaxPool2D
-from keras.optimizers import Adam
-from keras.layers.core import Dense, Activation, Dropout, Flatten
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
+
 from keras.utils import plot_model
 from keras.callbacks import TensorBoard
 from keras.datasets import cifar10
 from keras.utils import np_utils
 import random
 
-from sklearn.model_selection import KFold
 from sklearn.model_selection import train_test_split
-from keras.preprocessing.image import ImageDataGenerator
-
+#from keras.preprocessing.image import ImageDataGenerator
 
 class forToxicity(object):
     def __init__(self):
@@ -64,9 +62,10 @@ class forToxicity(object):
                 roundList.append(4)
             else:
                 print(i)
+        dfFish2['toxicityGroup'] = roundList
+
         print(roundList)
         print(len(roundList))
-        dfFish2['toxicityGroup'] = roundList
         # dfFish2 =dfFish2.reset_index()
         print(dfFish2.head())
         plt.hist(roundList)
@@ -86,12 +85,14 @@ class forToxicity(object):
                     # print(array.shape)
                     # print(array)
                     x.append(array)
+                    #x.append(img)
                     y.append(dfFish2['toxicityGroup'][name])
                     i += 1
                 except:
                     eject1.append(name)
                     print(dfFish2['toxicityGroup'][name])
                     #print(array)
+        x = np.array(x,dtype='float')
         print(eject1)
         print(y)
         import pickle
@@ -102,15 +103,104 @@ class forToxicity(object):
         # a = cv2.imread(fileName)
         # plt.imshow(a)
         # plt.show()
-        from sklearn.model_selection import StratifiedKFold
         from sklearn.model_selection import train_test_split
 
         x_train, x_test, y_train, y_test = train_test_split(x, y,test_size=0.2,stratify=y)
+        from keras.utils import to_categorical
+        y_test = to_categorical(y_test)
+        y_train = to_categorical(y_train)
+
         kf = StratifiedKFold(n_splits=5, shuffle=True)
         for train_index, test_index in kf.split(x_train, y_train):
           print('TRAIN:', train_index, 'TEST:', test_index)
 
-        def loadFile(self):
+    train_generator = ImageDataGenerator(
+        rescale=1. / 255,
+        shear_range=0.2,
+        zoom_range=0.2,
+        horizontal_flip=True,
+        featurewise_center=True,
+        featurewise_std_normalization=True,
+    )
+    train_generator.fit(x_train)
+
+     class MyModel(tf.keras.Model):
+        def __init__(self):
+            super(MyModel, self).__init__()
+            self.conv1 = tf.keras.layers.Conv2D(32,(3, 3), padding='same', activation=tf.nn.relu, data_format="channels_first")
+            self.conv2 =  tf.keras.layers.Conv2D(32,(3, 3), padding='valid', activation=tf.nn.relu)
+            self.mp1 =  tf.keras.layers.MaxPooling2D(pool_size=(2, 2))
+            self.dropout1 = tf.keras.layers.Dropout(0.25)
+
+            self.conv3 = tf.keras.layers.Conv2D(64,(3,3),activation=tf.nn.relu)
+            self.conv4 =  tf.keras.layers.Conv2D(64,(3, 3),activation=tf.nn.relu)
+            self.mp2  =   tf.keras.layers.MaxPooling2D( pool_size=(2, 2))
+            self.dropout2 = tf.keras.layers.Dropout(0.25)
+
+            self.flatten = tf.keras.layers.Flatten()
+            self.dense1 = tf.keras.layers.Dense( 256, activation=tf.nn.relu)
+            self.dropout3 = tf.keras.layers.Dropout(0.25)
+            self.dense2 = tf.keras.layers.Dense(5,activation=tf.nn.softmax)
+        def call(self, inputs,training=False):
+            #x = tf.keras.layers.Input(shape=(200,200,1))
+            x = self.conv1(inputs)
+            x = self.conv2(x)
+            x= self.mp1(x)
+            if training: x = self.dropout1(x)
+            x= self.dropout1(x)
+            x = self.conv3(x)
+            x = self.conv4(x)
+            x = self.mp2(x)
+            if training: x = self.dropout2(x)
+            x = self.dropout2(x)
+            x = self.flatten(x)
+            x = self.dense1(x)
+            if training: x = self.dropout3(x)
+            x = self.dropout3(x)
+            return self.dense2(x)
+    model = MyModel()
+    num_classes=5
+    model = tf.keras.Sequential([
+        #tf.keras.layers.Conv2D(32, (3, 3), activation=tf.nn.relu, data_format="channels_first"),
+        tf.keras.layers.Conv2D(32, (3, 3), activation=tf.nn.relu, input_shape=(200, 200,1)),
+        tf.keras.layers.Conv2D(32, (3, 3), activation=tf.nn.relu),
+        tf.keras.layers.MaxPooling2D(pool_size=(2,2)),
+        tf.keras.layers.Dropout(0.25),
+        tf.keras.layers.Conv2D(64, (3, 3), activation=tf.nn.relu),
+        tf.keras.layers.Conv2D(64, (3, 3), activation=tf.nn.relu),
+        tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
+        tf.keras.layers.Dropout(0.25),
+        # tf.keras.layers.Conv2D(128, (8, 8), activation=tf.nn.relu),
+        # tf.keras.layers.Conv2D(128, (8, 8), activation=tf.nn.relu),
+        # tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
+        # tf.keras.layers.Dropout(0.25),
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(256, activation=tf.nn.relu),
+        tf.keras.layers.Dropout(0.25),
+        tf.keras.layers.Dense(num_classes, activation=tf.nn.softmax)
+    ])
+    model.summary()
+    optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
+
+    from tensorflow.python.keras.callbacks import TensorBoard
+    #tsb = TensorBoard(log_dir='./logs',histogram_freq=1, write_graph=True, write_images=True)
+    summarizer=dict(
+        directory='./logs-tensorboard',
+        steps=50,
+        labels=['graph', 'losses','batch_loss','total-loss']
+    )
+    #tensorboard --logdir=G:\\マイドライブ\\colab\\logs
+    model.compile(loss='categorical_crossentropy', optimizer=tf.train.AdamOptimizer(learning_rate=0.001),metrics=['accuracy'])
+    model.fit(x_train, y_train, batch_size=96, epochs=30, callbacks=[tf.keras.callbacks.TensorBoard(log_dir='./log/')],verbose=1,validation_data=(x_test, y_test))
+    score = model.evaluate(x_test, y_test, verbose=0)
+
+    model.fit_generator(train_generator, steps_per_epoch=2000, epochs=50)
+
+    !python tensorflow/tensorboard/tensorboard.py --logdir=./logs
+
+
+    def loadFile(self):
+            os.chdir(r'G:\マイドライブ\colab')
             import pickle
             with open('picY.txt', 'rb') as f:
                 a = pickle.Unpickler(f)
