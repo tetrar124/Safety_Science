@@ -41,7 +41,7 @@ class CNN(object):
         CAS =df['CAS'][0],
         smiles =df['canonical_smiles'][0]
         for CAS, smiles in extract:
-            try:
+            #try:
                 m = Chem.MolFromSmiles(smiles)
                 #AllChem.Compute2DCoords(m)
                 name = '.\\allPictures\\' + str(CAS) + '.png'
@@ -50,18 +50,22 @@ class CNN(object):
                 mc = Chem.Mol(m.ToBinary())
                 Chem.Kekulize(mc)
                 #mh = Chem.AddHs(m)
-                drawer = rdMolDraw2D.MolDraw2DSVG(200, 200)
-                drawer.SetFontSize(0.8)
+                # drawer = rdMolDraw2D.MolDraw2DSVG(200, 200)
+                # drawer.SetFontSize(0.8)
+                # drawer.DrawMolecule(mc)
+                # drawer.FinishDrawing()
+                # svg = drawer.GetDrawingText()
+                # SVG(svg.replace('svg:', ''))
+                # fw = open("out.svg", "w")
+                # fw.write(svg)
+                # fw.close()
+                # cairosvg.svg2png(url='out.svg', write_to=name)
+                drawer =rdMolDraw2D.MolDraw2D(200,200)
+                drawer.SetScale(1)
                 drawer.DrawMolecule(mc)
                 drawer.FinishDrawing()
-                svg = drawer.GetDrawingText()
-                SVG(svg.replace('svg:', ''))
-                fw = open("out.svg", "w")
-                fw.write(svg)
-                fw.close()
-                cairosvg.svg2png(url='out.svg', write_to=name)
-            except:
-                #     print("pass1")
+            #except:
+                print("pass1")
                 pass
     def forDataSetPicture(self):
         os.chdir(r'G:\マイドライブ\Data\tox_predict\all_data\allPictures')
@@ -103,6 +107,8 @@ class CNN(object):
         import glob
         try:
             os.mkdir('allPicGray')
+        except:
+            pass
         for name in glob.glob('*.png'):
             temp = cv2.imread(name,0)
             name2  = '.\\allPicGray\\' +name

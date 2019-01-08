@@ -101,6 +101,7 @@ class tools(object):
                 AllChem.Compute2DCoords(m)
                 name = '.\\CAStoPictures\\' + str(CAS) + '.png'
                 Draw.MolToFile(m, name)
+                #rdMolDraw2D(SetScale=0)
             except:
                 #     print("pass1")
                 pass
