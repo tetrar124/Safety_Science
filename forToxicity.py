@@ -123,7 +123,10 @@ class forToxicity(object):
         featurewise_std_normalization=True,
     )
     train_generator.fit(x_train)
-
+    import tensorflow as tf
+    from tensorflow.keras import optimizers
+    from tf.keras.optimizers import Adam
+    optimizers.A
      class MyModel(tf.keras.Model):
         def __init__(self):
             super(MyModel, self).__init__()
