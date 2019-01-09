@@ -503,9 +503,21 @@ class tools(object):
                 pass
         elif compound is more toxic than others:
             pass
+    def invertColors(self):
+        import glob
+        import os
+        import cv2
+        import pylab as plt
+        os.chdir(r'G:\マイドライブ\colab\allPictures')
 
+        names = glob.glob('*.png')
 
-
+        for name in names:
+            #save_name= 'G:\マイドライブ\colab\invert\\' + name
+            save_name='C:\\tmp\\' + name
+            img = cv2.imread(name)
+            inv = cv2.bitwise_not(img)
+            cv2.imwrite(save_name, inv)
 
 if __name__ == '__main__':
     tool=tools()
