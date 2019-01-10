@@ -518,6 +518,48 @@ class tools(object):
             img = cv2.imread(name)
             inv = cv2.bitwise_not(img)
             cv2.imwrite(save_name, inv)
+    def chembleMACCSkeys(self):
+        import pandas as pd
+        import os
+        import numpy as np
+        import random
+        os.chdir(r"G:\マイドライブ\Data\tox_predict\chemble")
+        df = pd.read_csv('inchi-smiles.csv')
+        n = np.arange(0, df.shape[0], 1).tolist()
+        ran = random.sample(n,120000)
+        dfEx = df.iloc[ran]
+        dfExSmiles = dfEx['standard_inchi']
+
+        dfExInchi = dfEx['standard_inchi']
+        dfExInchi.to_csv('extractInchi.csv',index=None)
+
+        dfExSmiles.to_csv('extractSmiles.csv',index=None)
+
+    def rdkitFromSmiles(self):
+        from rdkit import Chem
+        import pandas as pd
+        import os
+        from rdkit.Chem import MACCSkeys
+        os.chdir(r"G:\マイドライブ\Data\tox_predict\chemble")
+        df = pd.read_csv('extractSmiles.csv',header=None)
+        #df = pd.read_csv('extractInchi.csv',header=None)
+        i = 0
+        baseDf = pd.DataFrame(columns=list(np.arange(0,167,1)))
+        for smiles in df[1]:
+            m = Chem.MolFromSmiles(smiles)
+            #m = Chem.MolFromInchi(smiles)
+            fgp = MACCSkeys.GenMACCSKeys(m)
+            fingerprint=[]
+            for num in np.arange(0,167,1):
+                num = int(num)
+                if fgp.GetBit(num) == False:
+                    fingerprint.append(0)
+                else:
+                    fingerprint.append(1)
+            tempDf = pd.DataFrame([fingerprint])
+            baseDf = pd.concat([baseDf,tempDf])
+            i+=1
+            print(i)
 
 if __name__ == '__main__':
     tool=tools()
