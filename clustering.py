@@ -421,7 +421,10 @@ class clustering(object):
 
 if __name__ == '__main__':
     cl = clustering()
-    name = "G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\MACCSKeys.csv"
+    name = r'G:\マイドライブ\Data\Meram Chronic Data\chronicMACCSKeys_tanimoto.csv'
+    #name = "G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\MACCSKeys.csv"
+    #tanimotoDf = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\all_data\MACCSKeys_tanimoto.csv", engine='python',                           index_col='CAS')
+    tanimotoDf = pd.read_csv(name, engine='python', index_col='CAS')
     #df = cl.calcKmeans(name)
     #df = cl.calcFussyCMean(name)
     #df = cl.calcDbscan(name)
@@ -429,7 +432,7 @@ if __name__ == '__main__':
     #spectralcsv = "C:\\googledrive\\Data\\tox_predict\\result\\fingerprint\\MACCSKeys.csv"
     #cl.makePictures(df)
     #cl.calcGMMwithBIC(name)
-    tanimotoDf = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\all_data\MACCSKeys_tanimoto.csv", engine='python',index_col='CAS')
+    #tanimotoDf = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\all_data\MACCSKeys_tanimoto.csv", engine='python',index_col='CAS')
     tanimotoDF = tanimotoDf.fillna(0)
     tanimotoDf = tanimotoDf[tanimotoDf.sum(axis=1)!=0]
     CAS = tanimotoDf.index.tolist()
@@ -439,11 +442,11 @@ if __name__ == '__main__':
     LouvainDf = tanimotoDf.reset_index()
     LouvainDf.columns = range(LouvainDf.shape[1])
     #for method in ['meanshift']:
-    #for method in ['louvain']:
+    for method in ['louvain']:
     #for method in ['kmeans']:
     #for method in ['DBSCAN']:
     #for method in ['HAC']:
-    for method in ['spectral']:
+    #for method in ['spectral']:
     #for method in ['GMM','louvain','spectral','kmeans','HAC','DBSCAN','meanshift']:
     #for method in ['HAC','GMM']:
         # 68.2percentile(1σ)
@@ -454,8 +457,8 @@ if __name__ == '__main__':
         # threshold = 0.738
         #threshold = 0.5
         #for threshold in [0.426,0.738,0.5,0.6,0.214]:
-        for threshold in [0.5,0.6,0.214]:
-        #for threshold in [0.426]:
+        #for threshold in [0.5,0.6,0.214]:
+        for threshold in [0.426]:
         #for threshold in [0.738,0.5,0.214]:
             tanimotoMax = - np.inf
             tempMaxDf = None
@@ -469,7 +472,8 @@ if __name__ == '__main__':
             medians = []
             weightMean=[]
             if method == 'louvain' :
-                setRange =  np.arange(0,1,0.002)
+                #setRange =  np.arange(0,1,0.002)
+                setRange = np.arange(0.7, 0.8, 0.01)
             elif method == 'DBSCAN' :
                 setRange = np.arange(0.01,2.01,0.01)
             elif method == 'meanshift':
@@ -522,7 +526,9 @@ if __name__ == '__main__':
                     tanimotoMax = tanimotoSum
                     tempMaxDf = df
                     tempClusterNum = cluster
-            os.chdir("G:\\マイドライブ\\Data\\tox_predict\\result\\newMethod")
+            #os.chdir("G:\\マイドライブ\\Data\\tox_predict\\result\\newMethod")
+            os.chdir('G:\マイドライブ\Data\Meram Chronic Data')
+            import datetime
             t = datetime.datetime.now()
             timestamp = str(t.year) + str(t.month) + str(t.day) + str(t.hour) + str(t.minute)
             tanimotoChangeCsv = str(method) + '_' + 'shre_' + str(threshold) + '_tanimotoChange.csv'
