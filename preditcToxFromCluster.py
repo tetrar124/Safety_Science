@@ -79,8 +79,13 @@ class testCluster(object):
         sampleToxValues.to_csv('targetToxValues.csv',index=False)
 
     def NewMergeCalcTox(self):
-        df1 = pd.read_csv('clusterData_Louvain_cluster_08.csv')
-        df2 = pd.read_csv('allData.csv')
+        # df1 = pd.read_csv('clusterData_Louvain_cluster_08.csv')
+        # df2 = pd.read_csv('allData.csv')
+
+        df1 = pd.read_csv('louvain_8071.0_150_th0.426.csv')
+        df2 = pd.read_csv('extChronicData.csv',encoding='cp932')
+        #df2 = df2[df2['毒性値']!='繁殖']
+        #df2 = df2['毒性値'].astype(float)
         #df2 = df2.drop(df2.index[df2['毒性値']<0])
         df2 = df2[df2['毒性値']>=0]
         toxValues = pd.merge(df1,df2,on = 'CAS',how = 'outer')
@@ -155,7 +160,9 @@ class testCluster(object):
 
         df3 = pd.read_csv('result.csv')
         df3.columns = ['targetCAS','CAS','TanimotoValue']
-        df4 = pd.read_csv('clusterData_Louvain_cluster_08.csv')
+        #df4 = pd.read_csv('clusterData_Louvain_cluster_08.csv')
+        df4 = pd.read_csv('clusterData_cluster071.csv')
+
         nearClusterDf = pd.merge(df3,df4,how='left',on='CAS')
         nearClusterDf = pd.merge(nearClusterDf,sampleToxValues,how='left',on='cluster')
         clusterNullDf = nearClusterDf[nearClusterDf['cluster'].isnull()]
@@ -171,12 +178,12 @@ class testCluster(object):
             for name in ['魚類', 'ミジンコ類', '藻類']:
                 targetToxValues = toxValuesTemp[toxValuesTemp['栄養段階'] == name]
                 toxValueList.extend([len(targetToxValues['毒性値']), len(targetToxValues['化学物質名'].unique())])
-                if name is '魚類' :
-                    targetToxValues = targetToxValues[targetToxValues['暴露時間（日）']<=4]
-                elif name is 'ミジンコ類':
-                    targetToxValues = targetToxValues[targetToxValues['暴露時間（日）']<=2]
-                elif name is '藻類':
-                    targetToxValues = targetToxValues[targetToxValues['暴露時間（日）']<=4]
+                # if name is '魚類' :
+                #     targetToxValues = targetToxValues[targetToxValues['暴露時間（日）']<=4]
+                # elif name is 'ミジンコ類':
+                #     targetToxValues = targetToxValues[targetToxValues['暴露時間（日）']<=2]
+                # elif name is '藻類':
+                #     targetToxValues = targetToxValues[targetToxValues['暴露時間（日）']<=4]
                 try:
                     minList = list(filter(lambda x: x < 0.01, targetToxValues['毒性値']))
                     PointZeroToOne = list(filter(lambda x: 0.1 > x >= 0.01, targetToxValues['毒性値']))
@@ -298,7 +305,8 @@ class testCluster(object):
     def connectNames(self):
         nearClusterDf = pd.read_csv('predict08_.csv',engine='python')
         nearClusterDf = nearClusterDf.rename(columns ={'CAS':'similarStructureCAS'})
-        allData = pd.read_csv('allData.csv',engine='python',encoding='utf-8')
+        allData = pd.read_csv('extChronicData.csv',engine='python',encoding='cp932')
+        #allData = pd.read_csv('allData.csv',engine='python',encoding='utf-8')
         casNumbers = nearClusterDf[['targetCAS','similarStructureCAS']].values.tolist()
         nameList = []
         for target,cas in casNumbers:
@@ -347,9 +355,10 @@ class testCluster(object):
         else:
             pass
         df = df.drop(['Fish_Count','Fish_Substances','Daphnia_Count','Daphnia_Substances','Algae_Count','Algae_Substances','Fish_Peak','Algae_Peak','Daphnia_Peak'],axis=1)
+        df = df.iloc[:,0:24]
         columns1 = df.iloc[0, 0:3].drop('similarStructureCAS').index.tolist()
         print(columns1)
-        columns2 = df.iloc[0,4:30].index.tolist()
+        columns2 = df.iloc[0,4:24].index.tolist()
         print(columns2)
         columns = columns1+columns2
         resultDf = pd.DataFrame(columns=columns)
@@ -358,7 +367,7 @@ class testCluster(object):
             for name in df['targetCAS'].unique().tolist():
                 tempDf = df[df['targetCAS'] == name]
                 tempDf = tempDf[tempDf['TanimotoValue'] >= 0.6]
-                calcDf =tempDf.iloc[:,5:30]
+                calcDf =tempDf.iloc[:,5:24]
                 print('DF',calcDf)
                 for i in np.arange(0,len(calcDf)-1,1):
                     num = tempDf['TanimotoValue'].iloc[i]
@@ -382,7 +391,7 @@ class testCluster(object):
                 else:
                     tempDf = tempDf[tempDf['Fish_result']!=tempDf['Fish_result'].max()]
                     print('eject',tempDf['Fish_result'].max())
-                calcDf =tempDf.iloc[:,5:30]
+                calcDf =tempDf.iloc[:,5:24]
                 for i in np.arange(0,len(calcDf)-1,1):
                     num = tempDf['TanimotoValue'].iloc[i]
                     calc = lambda x :x * num
@@ -415,10 +424,11 @@ class testCluster(object):
                             tempDf2 = tempDf2[tempDf['Fish_result']>0]
                             tempDf2 = tempDf2.dropna(subset=['Fish_result'])
                             print('eject',tempDf2['Fish_result'].max())
-                        calcDf =tempDf2.iloc[:,5:30]
+                        calcDf =tempDf2.iloc[:,5:24]
                         for i in np.arange(0,len(calcDf)-1,1):
                             num = tempDf2['TanimotoValue'].iloc[i]
-                            calc = lambda x :x * num
+                            print(num)
+                            calc = lambda x :x * float(num)
                             calcDf.iloc[i] = calcDf.iloc[i].map(calc)
                         #print(calcDf)
                         FishWeightCalcDf =calcDf.sum()/tempDf2['TanimotoValue'].sum()
@@ -437,7 +447,7 @@ class testCluster(object):
                             tempDf2 = tempDf2[tempDf['Daphnia_result']>0]
                             tempDf2 = tempDf2.dropna(subset=['Daphnia_result'])
                             print('eject',tempDf2['Daphnia_result'].max())
-                        calcDf =tempDf2.iloc[:,5:30]
+                        calcDf =tempDf2.iloc[:,5:24]
                         for i in np.arange(0,len(calcDf)-1,1):
                             num = tempDf2['TanimotoValue'].iloc[i]
                             calc = lambda x :x * num
@@ -463,7 +473,7 @@ class testCluster(object):
                             tempDf2 = tempDf2[tempDf['Algae_result']>0]
                             tempDf2 = tempDf2.dropna(subset=['Algae_result'])
                             print('eject',tempDf2['Algae_result'].max())
-                        calcDf =tempDf2.iloc[:,5:30]
+                        calcDf =tempDf2.iloc[:,5:24]
                         for i in np.arange(0,len(calcDf)-1,1):
                             num = tempDf2['TanimotoValue'].iloc[i]
                             calc = lambda x :x * num
@@ -612,9 +622,19 @@ class testCluster(object):
         df = df[['CAS', '化学物質名', '毒性値', '暴露時間（日）', '生物種', '栄養段階']]
         df2= df[df['化学物質名'].str.contains('hosphoric', na=False)]
     def checkNonspecificToxic(self):
-        os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
-        df = pd.read_csv('G:\\マイドライブ\\Data\\tox_predict\\all_data\\allDataAcute.csv',engine='python',encoding='utf-8')
+        os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
+        #os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
+        #df = pd.read_csv('G:\\マイドライブ\\Data\\tox_predict\\all_data\\allDataAcute.csv',engine='python',encoding='utf-8')
+        df = pd.read_csv('extChronicData.csv',engine='python',encoding='cp932')
         df = df[['CAS', '化学物質名', '毒性値', '暴露時間（日）', '生物種', '栄養段階']]
+        #ランダム選択
+        dfOver20 = df['CAS'].value_counts() >20
+        len(df['CAS'].unique().tolist())
+        over20 = dfOver20[dfOver20 == True].index.tolist()
+        import random
+        random.seed(0)
+        select = random.sample(over20, 40)
+        exDfEpo = df[df['CAS'].isin(select)]
         #抽出例
         #CAS = df['CAS'][df['化学物質名'].str.contains('carbamic', na=False)].unique()
         # #エポキシ
@@ -662,18 +682,20 @@ class testCluster(object):
         #                              '51218-45-2','1204-21-3', '7646-85-7', '64359-81-5', '10380-28-6',\
         #                             '584-79-2', '13510-49-1','944-22-9','1014-70-6', '13138-45-9',\
         #                              '2303-17-5', '10124-43-3', '11067-81-5','78-59-1','59-50-7'])]
-        exDfEpo = df[df['CAS'].isin(['64-17-5',         '7783-06-4',         '94-09-7',         '68951-67-7',         '71-36-3',         '68-12-2',         '131-17-9',         '91465-08-6',         '2425-06-1',         '8003-34-7',         '260-94-6',         '7646-79-9',         '608-73-1',         '106-44-5',         '55-38-9',         '151-50-8',         '26225-79-6',         '108-05-4',         '91-20-3',         '877-43-0',         '7173-51-5',         '3383-96-8',         '63-25-2',         '118-96-7',         '66230-04-4',         '110-80-5',         '7681-52-9',         '177256-67-6',         '1983-10-4',         '1918-02-1',         '2893-78-9',         '10102-18-8',         '7782-50-5',         '74223-64-6',         '7758-98-7',         '6515-38-4',         '34123-59-6',         '1918-16-7','122008-85-9','13593-03-8'])]
+        #exDfEpo = df[df['CAS'].isin(['64-17-5',         '7783-06-4',         '94-09-7',         '68951-67-7',         '71-36-3',         '68-12-2',         '131-17-9',         '91465-08-6',         '2425-06-1',         '8003-34-7',         '260-94-6',         '7646-79-9',         '608-73-1',         '106-44-5',         '55-38-9',         '151-50-8',         '26225-79-6',         '108-05-4',         '91-20-3',         '877-43-0',         '7173-51-5',         '3383-96-8',         '63-25-2',         '118-96-7',         '66230-04-4',         '110-80-5',         '7681-52-9',         '177256-67-6',         '1983-10-4',         '1918-02-1',         '2893-78-9',         '10102-18-8',         '7782-50-5',         '74223-64-6',         '7758-98-7',         '6515-38-4',         '34123-59-6',         '1918-16-7','122008-85-9','13593-03-8'])]
         exDfEpo = exDfEpo[['CAS', '化学物質名', '毒性値', '暴露時間（日）', '生物種', '栄養段階']]
         exDfEpo.to_csv('verhaar.csv',encoding='utf-8')
         #names = exDfEpo['化学物質名'].unique()
 
         names = exDfEpo['CAS'].unique().tolist()
-        os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
-        clusterDf = pd.read_csv('clusterData_Louvain_cluster_08.csv',engine='python',encoding='utf-8')
+        #os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
+        #clusterDf = pd.read_csv('clusterData_Louvain_cluster_08.csv',engine='python',encoding='utf-8')
+        clusterDf = pd.read_csv('louvain_8071.0_150_th0.426.csv',engine='python',encoding='utf-8')
         clusters = clusterDf[clusterDf['CAS'].isin(names)]
         exDfEpo.to_csv('epoxy.csv', encoding='utf-8')
         #谷本係数上位を抽出
-        tanimotoDf = pd.read_csv('MACCSKeys_tanimoto.csv')
+        #tanimotoDf = pd.read_csv('MACCSKeys_tanimoto.csv')
+        tanimotoDf = pd.read_csv('chronicMACCSKeys_tanimoto.csv')
         tanimotoDf = pd.melt(tanimotoDf, id_vars=['CAS']).dropna().sort_values('CAS')
         #普段は0.6、データが少ない場合は0.3
         tanimotoDf = tanimotoDf[tanimotoDf['value']>=0.6]
@@ -824,14 +846,14 @@ if __name__ == '__main__':
     cl = testCluster()
     if num ==1:
         cl.checkNonspecificToxic()
-        ##cl.sepTestData(df)
-        #cl.csvToToxdata()
-        # cl.mergeCalcTox()
-        cl.NewMergeCalcTox()
-        cl.connectNames()
-        #os.chdir(r"C:\OneDrive\公開\勝さん共有\リン酸")
+        # ##cl.sepTestData(df)
+        # #cl.csvToToxdata()
+        # # cl.mergeCalcTox()
+        # cl.NewMergeCalcTox()
+        # cl.connectNames()
+        # #os.chdir(r"C:\OneDrive\公開\勝さん共有\リン酸")
         df2 = pd.read_csv('predict08withName.csv').drop(['cluster'],axis=1)
-        # #cl.calcWeightAverageDf(df2,'weightedAverageDropMax')
+        # # #cl.calcWeightAverageDf(df2,'weightedAverageDropMax')
         cl.calcWeightAverageDf(df2,'weightedAverageDropLarge')
     else:
         cl.checkCluster()
