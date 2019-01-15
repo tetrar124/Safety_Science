@@ -161,7 +161,7 @@ class testCluster(object):
         df3 = pd.read_csv('result.csv')
         df3.columns = ['targetCAS','CAS','TanimotoValue']
         #df4 = pd.read_csv('clusterData_Louvain_cluster_08.csv')
-        df4 = pd.read_csv('clusterData_cluster071.csv')
+        df4 = pd.read_csv('louvain_8071.0_150_th0.426.csv')
 
         nearClusterDf = pd.merge(df3,df4,how='left',on='CAS')
         nearClusterDf = pd.merge(nearClusterDf,sampleToxValues,how='left',on='cluster')
@@ -355,10 +355,10 @@ class testCluster(object):
         else:
             pass
         df = df.drop(['Fish_Count','Fish_Substances','Daphnia_Count','Daphnia_Substances','Algae_Count','Algae_Substances','Fish_Peak','Algae_Peak','Daphnia_Peak'],axis=1)
-        df = df.iloc[:,0:24]
+        df = df.iloc[:,0:23]
         columns1 = df.iloc[0, 0:3].drop('similarStructureCAS').index.tolist()
         print(columns1)
-        columns2 = df.iloc[0,4:24].index.tolist()
+        columns2 = df.iloc[0,4:23].index.tolist()
         print(columns2)
         columns = columns1+columns2
         resultDf = pd.DataFrame(columns=columns)
@@ -409,6 +409,7 @@ class testCluster(object):
             for name in df['targetCAS'].unique().tolist():
                 tempDf = df[df['targetCAS'] == name]
                 targetInfo = tempDf.iloc[0, 0:4].drop(['similarStructureCAS', 'similarStructureName'])
+                targetInfo = tempDf[['targetCAS','targetName']].iloc[0]
                 for type in ['fish', 'Daphnia', 'Algae']:
                     print(name,type)
                     if type == 'fish':
@@ -424,10 +425,10 @@ class testCluster(object):
                             tempDf2 = tempDf2[tempDf['Fish_result']>0]
                             tempDf2 = tempDf2.dropna(subset=['Fish_result'])
                             print('eject',tempDf2['Fish_result'].max())
-                        calcDf =tempDf2.iloc[:,5:24]
+                        calcDf =tempDf2.iloc[:,5:30]
                         for i in np.arange(0,len(calcDf)-1,1):
                             num = tempDf2['TanimotoValue'].iloc[i]
-                            print(num)
+                            #print(num)
                             calc = lambda x :x * float(num)
                             calcDf.iloc[i] = calcDf.iloc[i].map(calc)
                         #print(calcDf)
@@ -446,8 +447,8 @@ class testCluster(object):
                             tempDf2 = tempDf2[tempDf2['Daphnia_result'] < tempDf2['Daphnia_result'].median()*10]
                             tempDf2 = tempDf2[tempDf['Daphnia_result']>0]
                             tempDf2 = tempDf2.dropna(subset=['Daphnia_result'])
-                            print('eject',tempDf2['Daphnia_result'].max())
-                        calcDf =tempDf2.iloc[:,5:24]
+                            #print('eject',tempDf2['Daphnia_result'].max())
+                        calcDf =tempDf2.iloc[:,5:30]
                         for i in np.arange(0,len(calcDf)-1,1):
                             num = tempDf2['TanimotoValue'].iloc[i]
                             calc = lambda x :x * num
@@ -459,8 +460,10 @@ class testCluster(object):
                         except:
                             DaphniaWeightCalcDf['Daphnia_tanimoto'] =''
                         #DaphniaWeightCalcDf = DaphniaWeightCalcDf[[0,6]]
+                        #DaphniaWeightCalcDf=   DaphniaWeightCalcDf.drop(['TanimotoValue'])
+
                     elif type == 'Algae':
-                        print(tempDf.head(1))
+                        #print(tempDf.head(1))
                         tempDf2 = tempDf.drop(['Fish_result','Fish_median','Fish_min','Fish_max','Fish_mode', 'Fish_average','Daphnia_result','Daphnia_median','Daphnia_min', 'Daphnia_max','Daphnia_mode', 'Daphnia_average'],axis=1)
                         #tempDf = tempDf[tempDf['TanimotoValue'] >= 0.6]
                         #データが一つの場合は保持
@@ -472,8 +475,8 @@ class testCluster(object):
                             tempDf2 = tempDf2[tempDf2['Algae_result'] < tempDf2['Algae_result'].median()*10]
                             tempDf2 = tempDf2[tempDf['Algae_result']>0]
                             tempDf2 = tempDf2.dropna(subset=['Algae_result'])
-                            print('eject',tempDf2['Algae_result'].max())
-                        calcDf =tempDf2.iloc[:,5:24]
+                            #print('eject',tempDf2['Algae_result'].max())
+                        calcDf =tempDf2.iloc[:,5:30]
                         for i in np.arange(0,len(calcDf)-1,1):
                             num = tempDf2['TanimotoValue'].iloc[i]
                             calc = lambda x :x * num
@@ -485,10 +488,13 @@ class testCluster(object):
                         except:
                             AlgaeWeightCalcDf['Algae_tanimoto'] = ''
                         #AlgaeWeightCalcDf = AlgaeWeightCalcDf[[0, 6]]
+                        #AlgaeWeightCalcDf=AlgaeWeightCalcDf.drop(['TanimotoValue'])
 
                 connectTemp =pd.concat([FishWeightCalcDf,DaphniaWeightCalcDf])
                 weightCalcDf =pd.concat([ connectTemp,AlgaeWeightCalcDf])
                 tempResult = pd.concat([targetInfo,weightCalcDf])
+                # tempname = name +'.csv'
+                # tempResult.to_csv(tempname)
                 resultDf = resultDf.append(tempResult,ignore_index=True)
             resultDf['type'] = 'This method'
             resultDf['calcMethod'] = calcMethod
@@ -506,8 +512,10 @@ class testCluster(object):
         targetToxDf['Fish_result']= targetToxDf['Fish_median']
         targetToxDf['Daphnia_result'] =targetToxDf['Daphnia_median']
         targetToxDf['Algae_result']=targetToxDf['Algae_median']
-
         connectDf = pd.concat([targetToxDf,resultDf])
+        resultDf.to_csv('tempreult.csv')
+        targetToxDf.to_csv('temptargetTox.csv')
+        connectDf.to_csv('tempcheck.csv')
         '''
         columns = ['calcMethod','targetCAS','targetName','type',\
                   'Fish_Count','Fish_Substances','Fish_tanimoto','Fish_result','Fish_average','Fish_max','Fish_median','Fish_min','Fish_mode',\
@@ -633,7 +641,7 @@ class testCluster(object):
         over20 = dfOver20[dfOver20 == True].index.tolist()
         import random
         random.seed(0)
-        select = random.sample(over20, 40)
+        select = random.sample(over20, 50)
         exDfEpo = df[df['CAS'].isin(select)]
         #抽出例
         #CAS = df['CAS'][df['化学物質名'].str.contains('carbamic', na=False)].unique()
@@ -786,7 +794,7 @@ class testCluster(object):
         # plt.scatter(dfFish3['DB value'], dfFish3['This method'])
         # plt.show()
     def checkCluster(self):
-        os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
+        #os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
         #Louvain法
         #df1 = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\all_data\clusterData_Louvain_cluster_08.csv",engine='python')
         #DBSCAN
@@ -798,6 +806,7 @@ class testCluster(object):
         #kmeans
         df1 = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\result\fingerprint\kmeans2.csv",engine='python')
         tanimotoDf = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\all_data\MACCSKeys_tanimoto.csv",engine='python',index_col = 'CAS')
+
         taniDF = tanimotoDf[tanimotoDf.sum(axis=1)!=0]
         clusters = df1['cluster'].unique().tolist()
         import math
@@ -839,7 +848,8 @@ class testCluster(object):
         rmse.to_csv('G:\\マイドライブ\\Data\\tox_predict\\all_data\\RMSE.csv')
 
 if __name__ == '__main__':
-    os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
+    #os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
+    os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
     #df = pd.read_csv('MACCSKeys_tanimoto.csv')
     #num = 1
     num = 1
@@ -849,8 +859,8 @@ if __name__ == '__main__':
         # ##cl.sepTestData(df)
         # #cl.csvToToxdata()
         # # cl.mergeCalcTox()
-        # cl.NewMergeCalcTox()
-        # cl.connectNames()
+        cl.NewMergeCalcTox()
+        cl.connectNames()
         # #os.chdir(r"C:\OneDrive\公開\勝さん共有\リン酸")
         df2 = pd.read_csv('predict08withName.csv').drop(['cluster'],axis=1)
         # # #cl.calcWeightAverageDf(df2,'weightedAverageDropMax')
