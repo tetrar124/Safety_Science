@@ -4,14 +4,13 @@ from sklearn.datasets import load_boston
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold, train_test_split
 
-print("Boston Housing: regression")
 boston = load_boston()
-y = boston['target']
-X = boston['data']
+df = pd.DataFrame(boston.data,columns=boston.feature_names)
+df['target']= boston.target
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.33, random_state=201612
-)
+y = df['target']
+x = df.drop(columns=['target'])
+X_train, X_test, y_train, y_test = train_test_split( boston.data, df.target, test_size=0.33, random_state=1)
 
 # create dataset for lightgbm
 lgb_train = lgb.Dataset(X_train, y_train)
