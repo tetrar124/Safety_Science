@@ -540,12 +540,18 @@ class tools(object):
         import pandas as pd
         import os
         from rdkit.Chem import MACCSkeys
-        os.chdir(r"G:\マイドライブ\Data\tox_predict\chemble")
-        df = pd.read_csv('extractSmiles.csv',header=None)
+        # os.chdir(r"G:\マイドライブ\Data\tox_predict\chemble")
+        # df = pd.read_csv('extractSmiles.csv',header=None)
+
+        os.chdir(r"G:\マイドライブ\Data\Meram Chronic Data")
+        df = pd.read_csv('extChronicStrcture.csv',engine='python')
+        df = df[['CAS', 'canonical_smiles']]
+        df = df.dropna(how='any')
+
         #df = pd.read_csv('extractInchi.csv',header=None)
         i = 0
         baseDf = pd.DataFrame(columns=list(np.arange(0,167,1)))
-        for smiles in df[1]:
+        for smiles in df.iloc[:,1]:
             m = Chem.MolFromSmiles(smiles)
             #m = Chem.MolFromInchi(smiles)
             fgp = MACCSkeys.GenMACCSKeys(m)

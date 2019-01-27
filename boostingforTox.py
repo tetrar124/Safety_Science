@@ -5,7 +5,7 @@ from sklearn.model_selection import KFold, train_test_split
 import pylab as plt
 import pandas as pd
 class boosting(object):
-    def  boost(self):
+    def  boost(self,df):
         df = None
 
         if df == None:
@@ -46,6 +46,9 @@ class boosting(object):
         y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
         RMSE =(np.sum ((y_pred-y_test)**2)/len(y_pred))**(1/2)
         print(RMSE)
+        print(np.corrcoef(y_pred,y_test))
         plt.scatter(y_pred,y_test)
         plt.show()
 if __name__ == '__main__':
+    boost=boosting()
+    boost.boost(df)
