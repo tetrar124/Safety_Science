@@ -535,7 +535,7 @@ class tools(object):
 
         dfExSmiles.to_csv('extractSmiles.csv',index=None)
 
-    def rdkitFromSmiles(self):
+    def fingertPrintFromSmiles(self):
         from rdkit import Chem
         import pandas as pd
         import os
@@ -549,23 +549,50 @@ class tools(object):
         df = df.dropna(how='any')
 
         #df = pd.read_csv('extractInchi.csv',header=None)
+        CAS = df['CAS']
+        SMILES =df['canonical_smiles']
         i = 0
-        baseDf = pd.DataFrame(columns=list(np.arange(0,167,1)))
-        for smiles in df.iloc[:,1]:
+        columns =np.arange(0,167,1).tolist()
+        columns.insert(0, 'CAS')
+        baseDf = pd.DataFrame(columns=columns)
+        for cas,smiles in zip(CAS,SMILES):
+            print(smiles)
             m = Chem.MolFromSmiles(smiles)
             #m = Chem.MolFromInchi(smiles)
             fgp = MACCSkeys.GenMACCSKeys(m)
             fingerprint=[]
+            fingerprint.append(cas)
             for num in np.arange(0,167,1):
                 num = int(num)
                 if fgp.GetBit(num) == False:
                     fingerprint.append(0)
                 else:
                     fingerprint.append(1)
-            tempDf = pd.DataFrame([fingerprint])
+            print(len(fingerprint))
+            tempDf = pd.DataFrame([fingerprint],columns=columns)
             baseDf = pd.concat([baseDf,tempDf])
             i+=1
             print(i)
+        #connect toxcity data
+        #baseDf = baseDf.set_index('CAS')
+        #baseDf = pd.read_csv('chronicMACCSkeys.csv')
+
+        baseDf = baseDf.reset_index()
+        toxDf = pd.read_csv('extChronicData.csv',encoding='cp932')
+        toxDf = toxDf[['CAS','毒性値']]
+        toxMedianDf = toxDf.groupby('CAS').median()
+        toxMedianDf = toxMedianDf.reset_index()
+        toxMedianDf = toxMedianDf.rename(columns={'毒性値':'toxValue'})
+        targetAndMACCSDf=pd.merge(baseDf,toxMedianDf,on='CAS',how='inner')
+        tox = targetAndMACCSDf['toxValue']
+        logTox = np.log10(tox)
+        targetAndMACCSDf['logTox'] = logTox
+        targetAndMACCSDf.to_csv('chronicMACCSkeys.csv',index=False)
+
+        tox = targetAndMACCSDf['toxValue']
+        logTox = np.log10(tox)
+        plt.hist(logTox, bins=500)
+
 
 if __name__ == '__main__':
     tool=tools()

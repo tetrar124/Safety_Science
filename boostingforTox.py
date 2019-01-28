@@ -6,9 +6,7 @@ import pylab as plt
 import pandas as pd
 class boosting(object):
     def  boost(self,df):
-        df = None
-
-        if df == None:
+        if len(df) == 0:
             boston = load_boston()
             df = pd.DataFrame(boston.data,columns=boston.feature_names)
             df['target']= boston.target
@@ -18,7 +16,9 @@ class boosting(object):
             X_train, X_test, y_train, y_test = train_test_split( df.drop(columns='target'), df.target, test_size=0.2, random_state=1)
 
         else:
-            X_train, X_test, y_train, y_test = train_test_split( df.drop(columns='target'), df.target, test_size=0.2, random_state=1)
+            y = df['logTox']
+            x = df.drop(columns=['CAS','toxValue','logTox'])
+            X_train, X_test, y_train, y_test = train_test_split( x, y, test_size=0.1, random_state=1)
 
         # create dataset for lightgbm
         lgb_train = lgb.Dataset(X_train, y_train)
@@ -50,5 +50,8 @@ class boosting(object):
         plt.scatter(y_pred,y_test)
         plt.show()
 if __name__ == '__main__':
+    import os
+    os.chdir('G:\マイドライブ\Data\Meram Chronic Data')
+    df= pd.read_csv('chronicMACCSkeys.csv')
     boost=boosting()
     boost.boost(df)
