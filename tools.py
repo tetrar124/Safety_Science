@@ -535,11 +535,11 @@ class tools(object):
 
         dfExSmiles.to_csv('extractSmiles.csv',index=None)
 
-    def fingertPrintFromSmiles(self):
+    def fingertPrintFromSmiles(self,type=morgan):
         from rdkit import Chem
         import pandas as pd
         import os
-        from rdkit.Chem import MACCSkeys
+        from rdkit.Chem import MACCSkeys,AllChem
         # os.chdir(r"G:\マイドライブ\Data\tox_predict\chemble")
         # df = pd.read_csv('extractSmiles.csv',header=None)
 
@@ -552,23 +552,39 @@ class tools(object):
         CAS = df['CAS']
         SMILES =df['canonical_smiles']
         i = 0
-        columns =np.arange(0,167,1).tolist()
+        if type = 'MACCSkey':
+            size = 167
+        elif type = 'morgan'
+            size = 1024
+        columns =np.arange(0,size,1).tolist()
         columns.insert(0, 'CAS')
         baseDf = pd.DataFrame(columns=columns)
+
         for cas,smiles in zip(CAS,SMILES):
             print(smiles)
             m = Chem.MolFromSmiles(smiles)
             #m = Chem.MolFromInchi(smiles)
-            fgp = MACCSkeys.GenMACCSKeys(m)
-            fingerprint=[]
-            fingerprint.append(cas)
-            for num in np.arange(0,167,1):
-                num = int(num)
-                if fgp.GetBit(num) == False:
-                    fingerprint.append(0)
-                else:
-                    fingerprint.append(1)
-            print(len(fingerprint))
+            fingerprint = []
+            if type =='MACCSKeys'
+                fgp = MACCSkeys.GenMACCSKeys(m)
+                fingerprint.append(cas)
+                for num in np.arange(0,size,1):
+                    num = int(num)
+                    if fgp.GetBit(num) == False:
+                        fingerprint.append(0)
+                    else:
+                        fingerprint.append(1)
+                print(len(fingerprint))
+            elif type == 'morgan':
+                fgp = AllChem.GetMorganFingerprintAsBitVect(m, 2, size)
+                fingerprint.append(cas)
+                for num in np.arange(0,size,1):
+                    num = int(num)
+                    if fgp.GetBit(num) == False:
+                        fingerprint.append(0)
+                    else:
+                        fingerprint.append(1)
+                print(len(fingerprint))
             tempDf = pd.DataFrame([fingerprint],columns=columns)
             baseDf = pd.concat([baseDf,tempDf])
             i+=1
@@ -583,13 +599,16 @@ class tools(object):
         toxMedianDf = toxDf.groupby('CAS').median()
         toxMedianDf = toxMedianDf.reset_index()
         toxMedianDf = toxMedianDf.rename(columns={'毒性値':'toxValue'})
-        targetAndMACCSDf=pd.merge(baseDf,toxMedianDf,on='CAS',how='inner')
+        targetAndFingerPrintDf=pd.merge(baseDf,toxMedianDf,on='CAS',how='inner')
         tox = targetAndMACCSDf['toxValue']
         logTox = np.log10(tox)
-        targetAndMACCSDf['logTox'] = logTox
-        targetAndMACCSDf.to_csv('chronicMACCSkeys.csv',index=False)
+        targetAndFingerPrintDf['logTox'] = logTox
+        if type = 'MACCSkeys':
+            targetAndFingerPrintDf.to_csv('chronicMACCSkeys.csv',index=False)
+        elif type = 'morgan'
+            targetAndFingerPrintDf.to_csv('chronicMorgan.csv', index=False)
 
-        tox = targetAndMACCSDf['toxValue']
+tox = targetAndMACCSDf['toxValue']
         logTox = np.log10(tox)
         plt.hist(logTox, bins=500)
 
