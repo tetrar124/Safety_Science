@@ -8,6 +8,8 @@ from rdkit.Chem import AllChem
 from rdkit import Chem
 import pylab as plt
 import math
+from networkx import *
+import numpy as np
 
 class tools(object):
     def __init__(self):
@@ -425,7 +427,6 @@ class tools(object):
         fig.subplots_adjust(left=0.08, right=0.95,top=1 ,bottom=0.1,wspace=0.4)
         plt.show()
     def testEdgeColor(self):
-        from networkx import *
         import matplotlib.pyplot as plt
         G = Graph()
         G.add_node(1)
@@ -439,70 +440,72 @@ class tools(object):
         # Uncomment this if you want your labels
         ## draw_networkx_labels(G, pos)
         plt.show()
+
     def verhaarClassifer(self):
-        compound = AtomAndStrcuture
-        if compound is not organic:
-            return 'otherClass'
-        elif compound has not C,H,N,O,S,halogen:
-            return  'otherClass'
-        elif logP > 6 :
-            return  'otherClass'
-        elif MW > 600:
-            return  'otherClass'
-        #Class1(narcosis or baseline toxicity)
-        if compound has iodine:
-            pass
-        elif compound has ionic group :
-            pass
-        elif compound has only H,C:
-            return  'class1 narcosis or baseline toxicity'
-        elif compound has only H,C,halogen:
-            if compounds is acylic:
-                if compound has halogen at B-positions from unsaturations:
-                    pass
-                else:
-                    return 'class1 narcosis or baseline toxicity'
-            elif compounds is mononyclic:
-                if compound has halogens on monocyclic:
-                    return 'class1 narcosis or baseline toxicity'
-                elif compound has only H on monocyclic:
-                    return 'class1 narcosis or baseline toxicity'
-                elif compound has acylic on monocyclic or polycyclic:
-                    if compound has halogen at B-positions from unsaturations:
-                        pass
-                    else:
-                        return 'class1 narcosis or baseline toxicity'
-        elif compound contain C,H,O:
-        #ethers,alcohols,ketones
-            if compound is benzylic alcohols or phenols:
-                pass
-            elif compound is epoxides or peroxides:
-                pass
-            elif compound is allylic or propargylic alcohols:
-                pass
-            elif compound is ab-unsaturated ketones:
-                pass
-            elif compound is 1-butenone or acetophenone:
-                pass
-        elif compound contain C,H,N:
-            if compound is aliphatic secondary or tertiary amines:
-                return 'class1 narcosis or baseline toxicity'
-        elif compound contain C,H,O ,halogen:
-            # ethers,alcohols,ketones
-            if compound is benzylic alcohols or phenols:
-                pass
-            elif compound is epoxides or peroxides:
-                pass
-            elif compound is allylic or propargylic alcohols:
-                pass
-            elif compound is ab - unsaturated ketones:
-                pass
-            elif compound is 1 - butenone or acetophenone:
-                pass
-            elif compound is a or b halogen-substituted compounds:
-                pass
-        elif compound is more toxic than others:
-            pass
+        pass
+    #     compound = AtomAndStrcuture
+    #     if compound is not organic:
+    #         return 'otherClass'
+    #     elif compound has not C,H,N,O,S,halogen:
+    #         return  'otherClass'
+    #     elif logP > 6 :
+    #         return  'otherClass'
+    #     elif MW > 600:
+    #         return  'otherClass'
+    #     #Class1(narcosis or baseline toxicity)
+    #     if compound has iodine:
+    #         pass
+    #     elif compound has ionic group :
+    #         pass
+    #     elif compound has only H,C:
+    #         return  'class1 narcosis or baseline toxicity'
+    #     elif compound has only H,C,halogen:
+    #         if compounds is acylic:
+    #             if compound has halogen at B-positions from unsaturations:
+    #                 pass
+    #             else:
+    #                 return 'class1 narcosis or baseline toxicity'
+    #         elif compounds is mononyclic:
+    #             if compound has halogens on monocyclic:
+    #                 return 'class1 narcosis or baseline toxicity'
+    #             elif compound has only H on monocyclic:
+    #                 return 'class1 narcosis or baseline toxicity'
+    #             elif compound has acylic on monocyclic or polycyclic:
+    #                 if compound has halogen at B-positions from unsaturations:
+    #                     pass
+    #                 else:
+    #                     return 'class1 narcosis or baseline toxicity'
+    #     elif compound contain C,H,O:
+    #     #ethers,alcohols,ketones
+    #         if compound is benzylic alcohols or phenols:
+    #             pass
+    #         elif compound is epoxides or peroxides:
+    #             pass
+    #         elif compound is allylic or propargylic alcohols:
+    #             pass
+    #         elif compound is ab-unsaturated ketones:
+    #             pass
+    #         elif compound is 1-butenone or acetophenone:
+    #             pass
+    #     elif compound contain C,H,N:
+    #         if compound is aliphatic secondary or tertiary amines:
+    #             return 'class1 narcosis or baseline toxicity'
+    #     elif compound contain C,H,O ,halogen:
+    #         # ethers,alcohols,ketones
+    #         if compound is benzylic alcohols or phenols:
+    #             pass
+    #         elif compound is epoxides or peroxides:
+    #             pass
+    #         elif compound is allylic or propargylic alcohols:
+    #             pass
+    #         elif compound is ab - unsaturated ketones:
+    #             pass
+    #         elif compound is 1 - butenone or acetophenone:
+    #             pass
+    #         elif compound is a or b halogen-substituted compounds:
+    #             pass
+    #     elif compound is more toxic than others:
+    #         pass
     def invertColors(self):
         import glob
         import os
@@ -535,7 +538,7 @@ class tools(object):
 
         dfExSmiles.to_csv('extractSmiles.csv',index=None)
 
-    def fingertPrintFromSmiles(self,type=morgan):
+    def fingertPrintFromSmiles(self,type='morgan'):
         from rdkit import Chem
         import pandas as pd
         import os
@@ -552,10 +555,10 @@ class tools(object):
         CAS = df['CAS']
         SMILES =df['canonical_smiles']
         i = 0
-        if type = 'MACCSkey':
+        if type == 'MACCSkey':
             size = 167
-        elif type = 'morgan'
-            size = 1024
+        elif type == 'morgan':
+            size = 2048
         columns =np.arange(0,size,1).tolist()
         columns.insert(0, 'CAS')
         baseDf = pd.DataFrame(columns=columns)
@@ -565,9 +568,9 @@ class tools(object):
             m = Chem.MolFromSmiles(smiles)
             #m = Chem.MolFromInchi(smiles)
             fingerprint = []
-            if type =='MACCSKeys'
+            fingerprint.append(cas)
+            if type =='MACCSKeys':
                 fgp = MACCSkeys.GenMACCSKeys(m)
-                fingerprint.append(cas)
                 for num in np.arange(0,size,1):
                     num = int(num)
                     if fgp.GetBit(num) == False:
@@ -577,7 +580,7 @@ class tools(object):
                 print(len(fingerprint))
             elif type == 'morgan':
                 fgp = AllChem.GetMorganFingerprintAsBitVect(m, 2, size)
-                fingerprint.append(cas)
+                print(len(fgp))
                 for num in np.arange(0,size,1):
                     num = int(num)
                     if fgp.GetBit(num) == False:
@@ -593,34 +596,45 @@ class tools(object):
         #baseDf = baseDf.set_index('CAS')
         #baseDf = pd.read_csv('chronicMACCSkeys.csv')
 
-        baseDf = baseDf.reset_index()
         toxDf = pd.read_csv('extChronicData.csv',encoding='cp932')
         toxDf = toxDf[['CAS','毒性値']]
         toxMedianDf = toxDf.groupby('CAS').median()
         toxMedianDf = toxMedianDf.reset_index()
         toxMedianDf = toxMedianDf.rename(columns={'毒性値':'toxValue'})
         targetAndFingerPrintDf=pd.merge(baseDf,toxMedianDf,on='CAS',how='inner')
-        tox = targetAndMACCSDf['toxValue']
+        tox = targetAndFingerPrintDf['toxValue']
         logTox = np.log10(tox)
         targetAndFingerPrintDf['logTox'] = logTox
-        if type = 'MACCSkeys':
+        if type == 'MACCSkeys':
             targetAndFingerPrintDf.to_csv('chronicMACCSkeys.csv',index=False)
-        elif type = 'morgan'
-            targetAndFingerPrintDf.to_csv('chronicMorgan.csv', index=False)
-
-tox = targetAndMACCSDf['toxValue']
+        elif type == 'morgan':
+            targetAndFingerPrintDf.to_csv('chronicMorgan.csv',index=False)
+        tox = targetAndFingerPrintDf['toxValue']
         logTox = np.log10(tox)
         plt.hist(logTox, bins=500)
-
+        plt.show()
+    def connectDF(self):
+        import os
+        os.chdir('G:\マイドライブ\Data\Meram Chronic Data')
+        import pandas as pd
+        df1= pd.read_csv('chronicMACCSkeys.csv',index_col='CAS')
+        df1 = df1.drop(['toxValue','logTox'],axis=1)
+        df2 = pd.read_csv('chronicMorgan.csv',index_col = 'CAS')
+        df3 = pd.concat([df1, df2], axis = 1, join = 'inner')
+        df3.to_csv('MorganMACCS.csv')
 
 if __name__ == '__main__':
     tool=tools()
 
-    path = 'G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\DBSCAN\\'
-    path = 'G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\k-means\\'
-    path = 'G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\GMM\\'
-    path = 'G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\louvain075\\'
-    tool.countFiles(path)
+    # path = 'G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\DBSCAN\\'
+    # path = 'G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\k-means\\'
+    # path = 'G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\GMM\\'
+    # path = 'G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\louvain075\\'
+    # tool.countFiles(path)
+
+    tool.fingertPrintFromSmiles('morgan')
+
+
     # os.chdir('G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint')
     # #df = pd.read_csv('G:\\マイドライブ\\Data\\tox_predict\\all_data\\clusterData_Louvain_cluster_08.csv',engine='python')
     # #tool.makeClusterPictures(df,strcture=None)

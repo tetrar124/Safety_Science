@@ -13,15 +13,14 @@ class boosting(object):
 
             y = df['target']
             x = df.drop(columns=['target'])
-            X_train, X_test, y_train, y_test = train_test_split( df.drop(columns='target'), df.target, test_size=0.2, random_state=1)
+            X_train, X_test, y_train, y_test = train_test_split( df.drop(columns='target'), df.target, test_size=0.1, random_state=1)
 
         else:
             y = df['logTox']
             x = df.drop(columns=['CAS','toxValue','logTox'])
-            X_train, X_test, y_train, y_test = train_test_split( x, y, test_size=0.1, random_state=1)
-
+            X_train, X_test, y_train, y_test = train_test_split( x, y, test_size=0.2, random_state=1)
         # create dataset for lightgbm
-        if type=lgb:
+        if type=='lgb':
             lgb_train = lgb.Dataset(X_train, y_train)
             lgb_eval = lgb.Dataset(X_test, y_test, reference=lgb_train)
             # LightGBM parameters
@@ -31,7 +30,7 @@ class boosting(object):
                     'objective' : 'regression',
                     'metric' : {'l2'},
                     'num_leaves' : 31,
-                    'learning_rate' : 0.1,
+                    'learning_rate' : 0.07,
                     'feature_fraction' : 0.9,
                     'bagging_fraction' : 0.8,
                     'bagging_freq': 5,
@@ -46,24 +45,33 @@ class boosting(object):
                         early_stopping_rounds=10)
             y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
 
-        if type = svr:
+        elif type == 'svr':
             from sklearn.svm import SVR
             from sklearn.model_selection import GridSearchCV
-            clf = SVR(gamma='scale', C=1.0, epsilon=0.2)
-            y_pred=clf.fit(X_test,y_test).predict(X_test)
-        if type = xgb:
+            clf = SVR(gamma=0.05, C=1, epsilon=0.2,kernel='poly')
+            y_pred=clf.fit(X_train,y_train).predict(X_test)
+
+        elif type == 'xgb':
             import xgboost as xgb
             mod = xgb.XGBRegressor()
             mod.fit(X_train, y_train)
             y_pred = mod.predict(X_test)
+        else:
+            print('no method')
         RMSE =(np.sum ((y_pred-y_test)**2)/len(y_pred))**(1/2)
         print(RMSE)
         print(np.corrcoef(y_pred,y_test))
         plt.scatter(y_pred,y_test)
         plt.show()
+
 if __name__ == '__main__':
     import os
     os.chdir('G:\マイドライブ\Data\Meram Chronic Data')
-    df= pd.read_csv('chronicMACCSkeys.csv')
+    #df= pd.read_csv('chronicMACCSkeys.csv')
+    df= pd.read_csv('chronicMorgan.csv')
+    #df= pd.read_csv('MorganMACCS.csv')
     boost=boosting()
-    boost.boost(df)
+    #MorganMACCS lgb 64% xgb 61% svr 65%
+    #MACCSKey lgb 62% xgb 59% svr60%
+    #Morgan lgb60% xgb 60% svr 55%
+    boost.boost(df,'lgb')
