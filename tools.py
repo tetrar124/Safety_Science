@@ -620,8 +620,46 @@ class tools(object):
         df1= pd.read_csv('chronicMACCSkeys.csv',index_col='CAS')
         df1 = df1.drop(['toxValue','logTox'],axis=1)
         df2 = pd.read_csv('chronicMorgan.csv',index_col = 'CAS')
-        df3 = pd.concat([df1, df2], axis = 1, join = 'inner')
+        df3 = pd.read_csv('clogp.csv',index_col='CAS')
+        df3 = pd.concat([df1, df2,df3], axis = 1, join = 'inner')
         df3.to_csv('MorganMACCS.csv')
+    def getDiscriptor(self):
+        from rdkit.Chem import Crippen
+        from rdkit import Chem
+        import pandas as pd
+        from rdkit .Chem import Descriptors
+
+        os.chdir(r"G:\マイドライブ\Data\Meram Chronic Data")
+        df = pd.read_csv('extChronicStrcture.csv',engine='python')
+        df = df[['CAS', 'canonical_smiles']]
+        df = df.dropna(how='any')
+
+        #df = pd.read_csv('extractInchi.csv',header=None)
+        CAS = df['CAS']
+        SMILES =df['canonical_smiles']
+        CASList=[]
+        logPList=[]
+        Wt = []
+        RotBonds=[]
+        for cas,smiles in zip(CAS,SMILES):
+            mol = Chem.MolFromSmiles(smiles)
+            CASList.append(cas)
+            wt = Descriptors.MolWt(mol)
+            Wt.append(wt)
+            Descriptors.
+                NumRoatatbleBonds(mol)
+
+            try:
+                logp = Crippen.MolLogP(mol)
+                logPList.append(logp)
+            except:
+                logp = Crippen.MolLogP(mol)
+                logPList.append(0)
+                print(cas,'zero')
+        df = pd.DataFrame()
+        df['CAS']=CASList
+        df['clogP']=logPList
+        df.to_csv('clogP.csv',index=False)
 
 if __name__ == '__main__':
     tool=tools()

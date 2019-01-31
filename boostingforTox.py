@@ -4,6 +4,10 @@ from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold, train_test_split
 import pylab as plt
 import pandas as pd
+from sklearn import preprocessing
+import scipy.stats
+
+
 class boosting(object):
     def  boost(self,df,type):
         if len(df) == 0:
@@ -17,6 +21,8 @@ class boosting(object):
 
         else:
             y = df['logTox']
+            #Normalize
+            df['clogP'] = scipy.stats.zscore(df['clogP'])
             x = df.drop(columns=['CAS','toxValue','logTox'])
             X_train, X_test, y_train, y_test = train_test_split( x, y, test_size=0.2, random_state=1)
         # create dataset for lightgbm
@@ -48,7 +54,7 @@ class boosting(object):
         elif type == 'svr':
             from sklearn.svm import SVR
             from sklearn.model_selection import GridSearchCV
-            clf = SVR(gamma=0.05, C=1, epsilon=0.2,kernel='poly')
+            clf = SVR(gamma=0.3, C=0.01, epsilon=0.1,kernel='poly')
             y_pred=clf.fit(X_train,y_train).predict(X_test)
 
         elif type == 'xgb':
@@ -68,10 +74,10 @@ if __name__ == '__main__':
     import os
     os.chdir('G:\マイドライブ\Data\Meram Chronic Data')
     #df= pd.read_csv('chronicMACCSkeys.csv')
-    df= pd.read_csv('chronicMorgan.csv')
-    #df= pd.read_csv('MorganMACCS.csv')
+    #df= pd.read_csv('chronicMorgan.csv')
+    df= pd.read_csv('MorganMACCS.csv')
     boost=boosting()
     #MorganMACCS lgb 64% xgb 61% svr 65%
     #MACCSKey lgb 62% xgb 59% svr60%
     #Morgan lgb60% xgb 60% svr 55%
-    boost.boost(df,'lgb')
+    boost.boost(df,'xgb')
