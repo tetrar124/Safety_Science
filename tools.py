@@ -555,10 +555,10 @@ class tools(object):
         CAS = df['CAS']
         SMILES =df['canonical_smiles']
         i = 0
-        if type == 'MACCSkey':
+        if type == 'MACCSkeys':
             size = 167
         elif type == 'morgan':
-            size = 2048
+            size = 512
         columns =np.arange(0,size,1).tolist()
         columns.insert(0, 'CAS')
         baseDf = pd.DataFrame(columns=columns)
@@ -569,7 +569,7 @@ class tools(object):
             #m = Chem.MolFromInchi(smiles)
             fingerprint = []
             fingerprint.append(cas)
-            if type =='MACCSKeys':
+            if type =='MACCSkeys':
                 fgp = MACCSkeys.GenMACCSKeys(m)
                 for num in np.arange(0,size,1):
                     num = int(num)
@@ -597,7 +597,8 @@ class tools(object):
         #baseDf = pd.read_csv('chronicMACCSkeys.csv')
 
         toxDf = pd.read_csv('extChronicData.csv',encoding='cp932')
-        toxDf = toxDf[['CAS','毒性値']]
+        toxDf = toxDf[['CAS','毒性値','栄養段階']]
+        toxDf = toxDf[toxDf['栄養段階']=='魚類']
         toxMedianDf = toxDf.groupby('CAS').median()
         toxMedianDf = toxMedianDf.reset_index()
         toxMedianDf = toxMedianDf.rename(columns={'毒性値':'toxValue'})
@@ -627,7 +628,8 @@ class tools(object):
         from rdkit.Chem import Crippen
         from rdkit import Chem
         import pandas as pd
-        from rdkit .Chem import Descriptors
+        from rdkit .Chem import Descriptors , Lipinski
+        import os
 
         os.chdir(r"G:\マイドライブ\Data\Meram Chronic Data")
         df = pd.read_csv('extChronicStrcture.csv',engine='python')
@@ -635,31 +637,32 @@ class tools(object):
         df = df.dropna(how='any')
 
         #df = pd.read_csv('extractInchi.csv',header=None)
+        columns = ['CAS','weight','logP','RotatableBonds','HeavyAtomCounts','AromProp','HDonor','HAcceptors','FractionCSP3','AromaticCarbocycles','AromaticHeterocycles']
         CAS = df['CAS']
         SMILES =df['canonical_smiles']
-        CASList=[]
-        logPList=[]
-        Wt = []
-        RotBonds=[]
+
+        resultDf = pd.DataFrame(columns=columns)
         for cas,smiles in zip(CAS,SMILES):
             mol = Chem.MolFromSmiles(smiles)
-            CASList.append(cas)
             wt = Descriptors.MolWt(mol)
-            Wt.append(wt)
-            Descriptors.
-                NumRoatatbleBonds(mol)
+            rot = Lipinski.NumRotatableBonds(mol)
+            heavy =Lipinski.HeavyAtomCount(mol)
+            logp = Crippen.MolLogP(mol)
+            aromaticHeavyatoms= len(mol.GetSubstructMatches(Chem.MolFromSmarts('[a]')))
+            numAtoms = mol.GetNumAtoms()
+            aromprop=float(aromaticHeavyatoms/numAtoms)
+            #TPSA = Descriptors.TPSA(mol)
+            HDonors = Descriptors.NumHDonors(mol)
+            HAcceptors = Descriptors.NumHAcceptors(mol)
 
-            try:
-                logp = Crippen.MolLogP(mol)
-                logPList.append(logp)
-            except:
-                logp = Crippen.MolLogP(mol)
-                logPList.append(0)
-                print(cas,'zero')
-        df = pd.DataFrame()
-        df['CAS']=CASList
-        df['clogP']=logPList
-        df.to_csv('clogP.csv',index=False)
+            FractionCSP3 = Descriptors.FractionCSP3(mol)
+            AromaticCarbocycles = Descriptors.NumAromaticCarbocycles(mol)
+            AromaticHeterocycles =Descriptors.NumAromaticHeterocycles(mol)
+
+            (print(HDonors,HAcceptors))
+            tempDf = pd.DataFrame([[cas,wt,logp,rot,heavy,aromprop,HDonors,HAcceptors,FractionCSP3,AromaticCarbocycles,AromaticHeterocycles]],columns=columns)
+            resultDf = pd.concat([resultDf,tempDf])
+        resultDf.to_csv('clogP.csv',index=False)
 
 if __name__ == '__main__':
     tool=tools()
@@ -670,7 +673,7 @@ if __name__ == '__main__':
     # path = 'G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\louvain075\\'
     # tool.countFiles(path)
 
-    tool.fingertPrintFromSmiles('morgan')
+    tool.fingertPrintFromSmiles('MACCSkeys')
 
 
     # os.chdir('G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint')
