@@ -32,6 +32,7 @@ class boosting(object):
             extractDf =  df['CAS'].isin(self.ejectCAS)
             df = df[~df['CAS'].isin(self.ejectCAS)]
             y = df['logTox']
+            'HDonor', 'HAcceptors', 'AromaticHeterocycles', 'AromaticCarbocycles', 'FractionCSP3'])
             #Normalize
             df['weight'] = scipy.stats.zscore(df['weight'])
             df['logP'] = scipy.stats.zscore(df['logP'])
@@ -44,8 +45,8 @@ class boosting(object):
             df['AromaticCarbocycles'] = scipy.stats.zscore(df['AromaticCarbocycles'])
             df['FractionCSP3'] = scipy.stats.zscore(df['FractionCSP3'])
 
-            x = df.drop(columns=['CAS','toxValue','logTox','HDonor','HAcceptors','AromaticHeterocycles','AromaticCarbocycles','FractionCSP3'])
-            #x = df.drop(columns=['CAS','toxValue','logTox'])
+            #x = df.drop(columns=['CAS','toxValue','logTox')
+            x = df.drop(columns=['CAS','toxValue','logTox'])
             X_train, X_test, y_train, y_test = train_test_split( x, y, test_size=0.1, random_state=2)
         # create dataset for lightgbm
         if type=='lgb':
@@ -57,11 +58,11 @@ class boosting(object):
                     'boosting_type' : 'gbdt',
                     'objective' : 'regression',
                     'metric' : {'l2'},
-                    'num_leaves' : 31,
-                    'learning_rate' : 0.07,
+                    'num_leaves' : 60,
+                    'learning_rate' : 0.08,
                     'feature_fraction' : 0.9,
-                    'bagging_fraction' : 0.8,
-                    'bagging_freq': 5,
+                    'bagging_fraction' : 0.9,
+                    'bagging_freq': 10,
                     'verbose' : 0
             }
             # train
@@ -76,7 +77,7 @@ class boosting(object):
         elif type == 'svr':
             from sklearn.svm import SVR
             from sklearn.model_selection import GridSearchCV
-            model = SVR(gamma=0.3, C=0.01, epsilon=0.1,kernel='poly')
+            model = SVR(gamma=0.3, C=0.01, epsilon=0.1,kernel='poly',)
             y_pred=model.fit(X_train,y_train).predict(X_test)
             y_train_pred=model.fit(X_train,y_train).predict(X_train)
 
@@ -134,4 +135,4 @@ if __name__ == '__main__':
 
     #result
     #descriptor Morgan512MACCS lgb72% xgb66% svr64%
-    boost.boost(df,'exRF')
+    boost.boost(df,'xgb')
