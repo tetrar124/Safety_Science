@@ -7,7 +7,6 @@ import pandas as pd
 from sklearn import preprocessing
 import scipy.stats
 
-
 class boosting(object):
     ejectCAS = ['10124-36-4', '108-88-3', '111991-09-4', '116-29-0', '120-12-7', '126833-17-8', '13171-21-6',
                 '1333-82-0','137-30-4', '148-79-8', '1582-09-8', '1610-18-0', '2058-46-0', '2104-64-5', '21725-46-2',
@@ -32,21 +31,26 @@ class boosting(object):
             extractDf =  df['CAS'].isin(self.ejectCAS)
             df = df[~df['CAS'].isin(self.ejectCAS)]
             y = df['logTox']
-            'HDonor', 'HAcceptors', 'AromaticHeterocycles', 'AromaticCarbocycles', 'FractionCSP3'])
+            df.drop(columns=['CAS','toxValue','logTox','HDonor', 'HAcceptors', 'AromaticHeterocycles', 'AromaticCarbocycles', 'FractionCSP3'])
+            dfX = df.drop(columns=['CAS','toxValue','logTox'])
             #Normalize
-            df['weight'] = scipy.stats.zscore(df['weight'])
-            df['logP'] = scipy.stats.zscore(df['logP'])
-            df['RotatableBonds'] = scipy.stats.zscore(df['RotatableBonds'])
-            df['HeavyAtomCounts'] = scipy.stats.zscore(df['HeavyAtomCounts'])
-            df['AromProp'] = scipy.stats.zscore(df['AromProp'])
-            df['HDonor'] = scipy.stats.zscore(df['HDonor'])
-            df['HAcceptors'] = scipy.stats.zscore(df['HAcceptors'])
-            df['AromaticHeterocycles'] = scipy.stats.zscore(df['AromaticHeterocycles'])
-            df['AromaticCarbocycles'] = scipy.stats.zscore(df['AromaticCarbocycles'])
-            df['FractionCSP3'] = scipy.stats.zscore(df['FractionCSP3'])
+            for name in dfX.columns:
+                print(dfX[str(name)])
+                dfX.apply(lambda x: ((x - x.mean()) * 1 / x.std() + 0),axis=0)
+
+
+            dfX['weight'] = scipy.stats.zscore(df['weight'])
+            dfX['logP'] = scipy.stats.zscore(df['logP'])
+            dfX['RotatableBonds'] = scipy.stats.zscore(df['RotatableBonds'])
+            dfX['HeavyAtomCounts'] = scipy.stats.zscore(df['HeavyAtomCounts'])
+            dfX['AromProp'] = scipy.stats.zscore(df['AromProp'])
+            dfX['HDonor'] = scipy.stats.zscore(df['HDonor'])
+            dfX['HAcceptors'] = scipy.stats.zscore(df['HAcceptors'])
+            dfX['AromaticHeterocycles'] = scipy.stats.zscore(df['AromaticHeterocycles'])
+            dfX['AromaticCarbocycles'] = scipy.stats.zscore(df['AromaticCarbocycles'])
+            dfX['FractionCSP3'] = scipy.stats.zscore(df['FractionCSP3'])
 
             #x = df.drop(columns=['CAS','toxValue','logTox')
-            x = df.drop(columns=['CAS','toxValue','logTox'])
             X_train, X_test, y_train, y_test = train_test_split( x, y, test_size=0.1, random_state=2)
         # create dataset for lightgbm
         if type=='lgb':
