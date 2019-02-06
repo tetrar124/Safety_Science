@@ -621,7 +621,7 @@ class tools(object):
         df1= pd.read_csv('chronicMACCSkeys.csv',index_col='CAS')
         df1 = df1.drop(['toxValue','logTox'],axis=1)
         df2 = pd.read_csv('chronicMorgan.csv',index_col = 'CAS')
-        df3 = pd.read_csv('clogp.csv',index_col='CAS')
+        df3 = pd.read_csv('Descriptors.csv',index_col='CAS')
         df3 = pd.concat([df1, df2,df3], axis = 1, join = 'inner')
         df3.to_csv('MorganMACCS.csv')
     def getDiscriptor(self):
@@ -637,7 +637,7 @@ class tools(object):
         df = df.dropna(how='any')
 
         #df = pd.read_csv('extractInchi.csv',header=None)
-        columns = ['CAS','weight','logP','RotatableBonds','HeavyAtomCounts','AromProp','HDonor','HAcceptors','FractionCSP3','AromaticCarbocycles','AromaticHeterocycles']
+        columns = ['CAS','weight','logP','RotatableBonds','HeavyAtomCounts','AromProp','TPSA','HDonor','HAcceptors','FractionCSP3','AromaticCarbocycles','AromaticHeterocycles']
         CAS = df['CAS']
         SMILES =df['canonical_smiles']
 
@@ -651,7 +651,7 @@ class tools(object):
             aromaticHeavyatoms= len(mol.GetSubstructMatches(Chem.MolFromSmarts('[a]')))
             numAtoms = mol.GetNumAtoms()
             aromprop=float(aromaticHeavyatoms/numAtoms)
-            #TPSA = Descriptors.TPSA(mol)
+            TPSA = Descriptors.TPSA(mol)
             HDonors = Descriptors.NumHDonors(mol)
             HAcceptors = Descriptors.NumHAcceptors(mol)
 
@@ -660,9 +660,9 @@ class tools(object):
             AromaticHeterocycles =Descriptors.NumAromaticHeterocycles(mol)
 
             (print(HDonors,HAcceptors))
-            tempDf = pd.DataFrame([[cas,wt,logp,rot,heavy,aromprop,HDonors,HAcceptors,FractionCSP3,AromaticCarbocycles,AromaticHeterocycles]],columns=columns)
+            tempDf = pd.DataFrame([[cas,wt,logp,rot,heavy,aromprop,TPSA,HDonors,HAcceptors,FractionCSP3,AromaticCarbocycles,AromaticHeterocycles]],columns=columns)
             resultDf = pd.concat([resultDf,tempDf])
-        resultDf.to_csv('clogP.csv',index=False)
+        resultDf.to_csv('Descriptors.csv',index=False)
 
 if __name__ == '__main__':
     tool=tools()
