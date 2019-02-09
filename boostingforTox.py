@@ -35,7 +35,16 @@ class boosting(object):
             dropList = ['CAS','toxValue','logTox','HDonor', 'HAcceptors', 'AromaticHeterocycles', 'AromaticCarbocycles', 'FractionCSP3']
             #dropList = ['CAS','toxValue','logTox']
             X = df.drop(columns=dropList)
-            #Normalize
+            # Normalize
+            for name in X.columns:
+                if str.isdecimal(name) == True:
+                    if X[str(name)].sum() == 0:
+                        print(name)
+                        X = X.drop(columns=name)
+                else:
+                    std = X[name].std()
+                    mean = X[name].mean()
+                    X[name] = X[name].apply(lambda x: ((x - mean) * 1 / std + 0))
 
             X_train, X_test, y_train, y_test = train_test_split( X, y, test_size=0.1, random_state=2)
         # create dataset for lightgbm
@@ -79,7 +88,7 @@ class boosting(object):
             y_train_pred = model.predict(X_train)
 
         elif type == 'exRF':
-            import sklearn.ensemble
+            import sklearn.ensemble import ExtraTreesRegressor
             clf = sklearn.ensemble.ExtraTreesRegressor()
             y_pred=clf.fit(X_train,y_train).predict(X_test)
             model = clf.fit(X_train,y_train)
