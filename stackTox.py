@@ -62,7 +62,7 @@ X_train, X_test, y_train, y_test = train_test_split( X, y, test_size=0.1, random
 
 cols = np.arange(1,550,1).tolist()
 cols = X.columns.tolist()
-#cols = [1,2,3]
+cols = [1,2,3]
 # Initializing Classifiers
 reg1 = Ridge(random_state=1)
 #reg2 = ExtraTreesRegressor()
