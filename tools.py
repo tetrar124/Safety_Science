@@ -663,6 +663,38 @@ class tools(object):
             tempDf = pd.DataFrame([[cas,wt,logp,rot,heavy,aromprop,TPSA,HDonors,HAcceptors,FractionCSP3,AromaticCarbocycles,AromaticHeterocycles]],columns=columns)
             resultDf = pd.concat([resultDf,tempDf])
         resultDf.to_csv('Descriptors.csv',index=False)
+    def halfsupervisedlearning(self):
+        df = pd.read_csv('louvain_58315.0_892_th0.426.csv')
+        df= pd.read_csv('louvain_1608955.0_190_th0.426.csv')
+        check = []
+        for CAS in df['CAS']:
+            a = '-dummy' in CAS
+            check.append(a)
+        df['check']=check
+        test = []
+        for i in df['check']:
+            if i == True:
+                test.append(0)
+            else:
+                test.append(1)
+        df['test']=test
+
+        checkDf = pd.DataFrame(columns=['cluster','result'])
+        for clu in df['cluster'].unique():
+            dftemp = df[df['cluster'] == clu]
+            if dftemp['test'].sum() ==0:
+                result= 0
+            else:
+                result=1
+            tempDf = pd.DataFrame({'cluster':[clu],'result':[result]})
+            checkDf = pd.concat([checkDf,tempDf])
+        checkDf['cluster'] = checkDf['cluster'].astype(int)
+        resultDf = pd.merge(df,checkDf,on='cluster')
+        finalDf = resultDf[resultDf['result'] != 0]
+
+        finalDf['result'].sum() - finalDf['test'].sum()
+
+        finalDf.to_csv('69chemicals_8978.csv')
 
 if __name__ == '__main__':
     tool=tools()

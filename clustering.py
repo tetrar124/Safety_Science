@@ -421,7 +421,7 @@ class clustering(object):
 
 if __name__ == '__main__':
     cl = clustering()
-    name = r'G:\マイドライブ\Data\Meram Chronic Data\chronicMACCSKeys_tanimoto.csv'
+    name = r'G:\マイドライブ\Data\Meram Chronic Data\cembleChronicMACCSKeys_tanimoto.csv'
     #name = "G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\MACCSKeys.csv"
     #tanimotoDf = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\all_data\MACCSKeys_tanimoto.csv", engine='python',                           index_col='CAS')
     tanimotoDf = pd.read_csv(name, engine='python', index_col='CAS')
@@ -473,7 +473,8 @@ if __name__ == '__main__':
             weightMean=[]
             if method == 'louvain' :
                 #setRange =  np.arange(0,1,0.002)
-                setRange = np.arange(0.7, 0.8, 0.01)
+                setRange = [0.83]
+                #setRange = np.arange(0.8, 0.6, -0.01)
             elif method == 'DBSCAN' :
                 setRange = np.arange(0.01,2.01,0.01)
             elif method == 'meanshift':

@@ -14,6 +14,8 @@ import math
 import pubchempy as pcp
 import os
 from joblib import Parallel, delayed
+from datetime import datetime
+from tqdm import tqdm
 
 
 def calc_tanimoto(multi = None):
@@ -141,9 +143,7 @@ def calc_tanimoto2(df,multi=None):
 def calc_tanimoto_parallel(df,multi=None):
     #os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
     #df = pd.read_csv('structure_result2.csv')
-    result_df = pd.DataFrame(index=df['CAS'])
-    #fin1 = df['cactvs_fingerprint']
-    fin1 =df['isomeric_smiles'].fillna('')
+    fin1 =df['isomeric_smiles'].fillna('').tolist()
 
     def calcTani(i,fin_temp1_ori):
         print(i)
@@ -177,22 +177,15 @@ def calc_tanimoto_parallel(df,multi=None):
                         col.append(result)
             return  i,col
 
-    r =Parallel(n_jobs=-1)([delayed(calcTani)(i, smiles) for i, smiles in enumerate(fin1)])
-
-        # try:
-        #     result_col_df = pd.DataFrame({df['CAS'][i]:col},index=df['CAS'])
-        #     #result_col_df = pd.DataFrame(col,colunms =df['CAS'][i], index=df['CAS'])
-        #
-        #     result_df[df['CAS'][i]] = result_col_df
-        # except:
-        #     result_col_df = pd.DataFrame({df['CAS'][i]:''},index=df['CAS'])
-        #     result_df[df['CAS'][i]] = result_col_df
-        #print(result_df.head())
-    #result_df.to_csv('MACCSKeys_tanimoto.csv')
+    r =Parallel(n_jobs=6)([delayed(calcTani)(i, smiles) for i, smiles in enumerate(tqdm(fin1))])
+    r.sort(key=lambda x: x[0])
+    tanimotoData = [t[1] for t in r]
+    result_df = pd.DataFrame(tanimotoData, index=df['CAS'], columns=df['CAS'])
     result_df.to_csv('cembleChronicMACCSKeys_tanimoto.csv')
+
 if __name__ == '__main__':
     os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
-    testDf = pd.read_csv(r'G:\マイドライブ\Data\Meram Chronic Data\.csv',engine='python')
+    testDf = pd.read_csv(r'G:\マイドライブ\Data\Meram Chronic Data\paraTest.csv',engine='python')
 
 
     df1 = pd.read_csv(r'G:\マイドライブ\Data\Meram Chronic Data\extChronicStrcture.csv',engine='python')
@@ -207,5 +200,5 @@ if __name__ == '__main__':
     df = pd.concat([df1,df2])
     df.reset_index(drop=True, inplace=True)
     df['CAS'].astype(str)
-    calc_tanimoto2(df)
+    calc_tanimoto_parallel(df)
     #countFiles()
