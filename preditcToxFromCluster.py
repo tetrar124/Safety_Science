@@ -137,7 +137,10 @@ class testCluster(object):
                                 temp.extend(tox)
                                 peakCount += 1
                         result = temp
-                        resultValue = statistics.mean(result)
+                        try:
+                            resultValue = statistics.median(result)
+                        except:
+                            resultValue = 'nan'
                         if peakCount ==1 :
                             peak = 'Single Top'
                         elif peakCount == 2:
@@ -846,6 +849,84 @@ class testCluster(object):
         tempdf = df[['CAS No.','Chemical substance','Type','Tox value [mg/L]']]
         rmse = df.pivot(index='CAS No.', columns='Type', values='Tox val')
         rmse.to_csv('G:\\マイドライブ\\Data\\tox_predict\\all_data\\RMSE.csv')
+
+    def forhalfSupervisedLearning(self):
+        df1 = pd.read_csv('louvain_58315.0_892_th0.426.csv')
+        df2 = pd.read_csv('extChronicData.csv',encoding='cp932')
+        df2 = df2.iloc[:,0:11]
+        df2 = df2[df2['毒性値']>=0]
+        toxValues = pd.merge(df1,df2,on = 'CAS',how = 'outer')
+        #toxValues.to_csv('allDataAndCluster.csv')
+        '''クラスタ帰属物質のデータ抽出'''
+        clusters = toxValues['cluster'].unique()
+        columnList = ['cluster','Fish_Count','Fish_Substances','Fish_Peak','Fish_result','Fish_median','Fish_min','Fish_max','Fish_mode', 'Fish_average','Daphnia_Count','Daphnia_Substances','Daphnia_Peak','Daphnia_result','Daphnia_median','Daphnia_min', 'Daphnia_max','Daphnia_mode', 'Daphnia_average','Algae_Count','Algae_Substances','Algae_Peak', 'Algae_result','Algae_median', 'Algae_min', 'Algae_max','Algae_mode', 'Algae_average']
+        sampleToxValues =pd.DataFrame(columns=columnList)
+        for cluster in clusters:
+            if cluster == 'nan':
+                pass
+            else:
+                toxValueList = []
+                toxValuesTemp=toxValues[toxValues['cluster']==cluster]
+                toxValueList.extend([cluster,])
+                for name in ['魚類','ミジンコ類','藻類']:
+                    targetToxValues = toxValuesTemp[toxValuesTemp['栄養段階']==name]
+                    toxValueList.extend([len(targetToxValues['毒性値']),len(targetToxValues['化学物質名'].unique())])
+                    #print(toxValueList)
+                    try:
+                        minList =list(filter(lambda x:  x <0.01  , targetToxValues['毒性値']))
+                        PointZeroToOne =list(filter(lambda x:  0.1>x >=0.01  , targetToxValues['毒性値']))
+                        ZeroPointToOne =list(filter(lambda x:  1>x >=0.1  , targetToxValues['毒性値']))
+                        OneToTen = list(filter(lambda x: 10 > x >=1  , targetToxValues['毒性値']))
+                        TenToHun = list(filter(lambda x: 100 > x >=10  , targetToxValues['毒性値']))
+                        HunToThou = list(filter(lambda x: 1000 > x >= 100, targetToxValues['毒性値']))
+                        ThouToTenThou = list(filter(lambda x: 10000 > x >= 1000, targetToxValues['毒性値']))
+                        maxList = list(filter(lambda x: x >= 10000, targetToxValues['毒性値']))
+                        result = []
+                        peakCount = 0
+                        for tox in [minList,PointZeroToOne,ZeroPointToOne,OneToTen,TenToHun,HunToThou,ThouToTenThou,maxList]:
+                            print(cluster,name)
+                            print('tox',tox)
+                            if len(result) == 0:
+                                result = tox
+                                temp = tox
+                                peakCount = 1
+                            elif len(result) > len(tox):
+                                pass
+                            elif len(result) < len(tox):
+                                result = tox
+                                temp = tox
+                                peakCount = 1
+                            elif len(result) == len(tox):
+                                result = tox
+                                temp.extend(tox)
+                                peakCount += 1
+                        result = temp
+                        try:
+                            resultValue = statistics.median(result)
+                        except:
+                            resultValue = 'nan'
+                        print('resutlt', resultValue,resultValue)
+                        if peakCount ==1 :
+                            peak = 'Single Top'
+                        elif peakCount == 2:
+                            peak = 'Double Top'
+                        elif peakCount ==3:
+                            peak ='Triple Top'
+                        elif peakCount > 3:
+                            peak = 'Flat'
+                        #print(resultValue)
+                        toxValueList.extend([peak,resultValue,targetToxValues['毒性値'].median(),targetToxValues['毒性値'].min(),targetToxValues['毒性値'].max(),targetToxValues['毒性値'].mode()[0],targetToxValues['毒性値'].mean()])
+                    except:
+                        if len(targetToxValues['毒性値']) == 1:
+                            val = targetToxValues['毒性値']
+                            toxValueList.extend(['-',val, val, val, val, val, val])
+                        else:
+                            toxValueList.extend(['-','nan', 'nan', 'nan', 'nan', 'nan', 'nan'])
+                #print(toxValueList)
+                tempDf = pd.DataFrame([toxValueList],columns=columnList)
+                sampleToxValues = pd.concat([sampleToxValues,tempDf])
+         sampleToxValues.to_csv('clusterTox.csv')
+
 
 if __name__ == '__main__':
     #os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
