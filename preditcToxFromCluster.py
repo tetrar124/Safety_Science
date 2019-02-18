@@ -851,7 +851,7 @@ class testCluster(object):
         rmse.to_csv('G:\\マイドライブ\\Data\\tox_predict\\all_data\\RMSE.csv')
 
     def forhalfSupervisedLearning(self):
-        df1 = pd.read_csv('louvain_58315.0_892_th0.426.csv')
+        df1 = pd.read_csv('louvain_1608955.0_190_th0.426.csv')
         df2 = pd.read_csv('extChronicData.csv',encoding='cp932')
         df2 = df2.iloc[:,0:11]
         df2 = df2[df2['毒性値']>=0]
@@ -925,7 +925,7 @@ class testCluster(object):
                 #print(toxValueList)
                 tempDf = pd.DataFrame([toxValueList],columns=columnList)
                 sampleToxValues = pd.concat([sampleToxValues,tempDf])
-         sampleToxValues.to_csv('clusterTox.csv')
+         sampleToxValues.to_csv('069clusterTox.csv')
 
 
 if __name__ == '__main__':
