@@ -41,14 +41,36 @@ class(object):
       corr = np.corrcoef(real, pred.flatten())[0,1]
       return corr
 
+    def sepTables(self,df=None):
+        try:
+            if df == None:
+                df = pd.read_csv('MorganMACCS.csv')
+        except:
+            pass
+
+
+        try:
+            #y = df['toxValue']
+            #y = df['logTox']
+            df = df.drop(['toxValue','logTox'],axis=1)
+            df = df.set_index('CAS')
+        except:
+            pass
+        key = 167
+        MACCS = df.iloc[:,0:key]
+        Morgan = df.iloc[:,key:key+512]
+        descriptors = df.iloc[:,key+512:]
+        print(MACCS.shape,Morgan.shape,descriptors.shape)
+        return MACCS,Morgan,descriptors
+
     def test(self):
         df =pd.read_csv('MorganMACCS.csv')
         baseDf = df
         extractDf =  df['CAS'].isin(ejectCAS)
         df = df[~df['CAS'].isin(ejectCAS)]
         y = df['logTox']
-        dropList = ['CAS','toxValue','logTox','HDonor', 'HAcceptors', 'AromaticHeterocycles', 'AromaticCarbocycles', 'FractionCSP3']
-                    #dropList = ['CAS','toxValue','logTox']
+        #dropList = ['CAS','toxValue','logTox','HDonor', 'HAcceptors', 'AromaticHeterocycles', 'AromaticCarbocycles', 'FractionCSP3']
+        dropList = ['CAS','toxValue','logTox']
         X = df.drop(columns=dropList)
         #Normalize
         for name in X.columns:
