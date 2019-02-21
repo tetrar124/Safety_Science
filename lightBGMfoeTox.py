@@ -5,13 +5,14 @@ import os
 from lightgbm import LGBMRegressor
 #from fastFM import sgd
 from rgf.sklearn import RGFRegressor
-
+import xgboost
 from sklearn.linear_model import Ridge
 from sklearn.svm import SVR
 from sklearn.ensemble import ExtraTreesRegressor
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.linear_model import LinearRegression, SGDRegressor
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.ensemble import RandomForestRegressor
 
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.model_selection import GridSearchCV
@@ -19,8 +20,13 @@ from sklearn.pipeline import make_pipeline
 
 from mlxtend.regressor import StackingRegressor
 from mlxtend.feature_selection import ColumnSelector
-
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.pipeline import make_pipeline
+import scipy as sp
+from sklearn.preprocessing import normalize
 from sklearn.datasets import load_boston
+from sklearn.decomposition import PCA
+
 class(object):
 
     ejectCAS = ['10124-36-4', '108-88-3', '111991-09-4', '116-29-0', '120-12-7', '126833-17-8', '13171-21-6',
@@ -41,48 +47,151 @@ class(object):
       corr = np.corrcoef(real, pred.flatten())[0,1]
       return corr
 
-    def sepTables(self,df=None):
+    def sepTables(self,xdf=None):
         try:
-            if df == None:
-                df = pd.read_csv('MorganMACCS.csv')
+            if xdfdf == None:
+                xdf = pd.read_csv('MorganMACCS.csv')
         except:
             pass
-
-
         try:
             #y = df['toxValue']
             #y = df['logTox']
-            df = df.drop(['toxValue','logTox'],axis=1)
-            df = df.set_index('CAS')
+            xdf = xdf.drop(['toxValue','logTox'],axis=1)
+            xdf = xdf.set_index('CAS')
         except:
             pass
         key = 167
-        MACCS = df.iloc[:,0:key]
-        Morgan = df.iloc[:,key:key+512]
-        descriptors = df.iloc[:,key+512:]
+        MACCS = xdf.iloc[:,0:key]
+        Morgan = xdf.iloc[:,key:key+512]
+        descriptors = xdf.iloc[:,key+512:]
         print(MACCS.shape,Morgan.shape,descriptors.shape)
         return MACCS,Morgan,descriptors
 
     def test(self):
         df =pd.read_csv('MorganMACCS.csv')
+        df2=pd.read_csv('chronicMACCSKeys_tanimoto.csv')
+        df2 = df2.drop(ejectCAS,axis=1).set_index('CAS').dropna(how='all', axis=1)
         baseDf = df
         extractDf =  df['CAS'].isin(ejectCAS)
         df = df[~df['CAS'].isin(ejectCAS)]
+        df = df.set_index('CAS')
+        df3 = pd.concat([df,df2],axis=1, join_axes=[df.index])
+        df = pd.
         y = df['logTox']
         #dropList = ['CAS','toxValue','logTox','HDonor', 'HAcceptors', 'AromaticHeterocycles', 'AromaticCarbocycles', 'FractionCSP3']
         dropList = ['CAS','toxValue','logTox']
         X = df.drop(columns=dropList)
         #Normalize
         for name in X.columns:
-            if str.isdecimal(name)==True:
-              if X[str(name)].sum() == 0:
-                   print(name)
-                   X = X.drop(columns=name)
-            else:
+            try:
+                 name = float(name)
+            except:
                 std =X[name].std()
                 mean = X[name].mean()
                 X[name] = X[name].apply(lambda x: ((x - mean) * 1 / std + 0))
         X_train, X_test, y_train, y_test = train_test_split( X, y, test_size=0.1, random_state=2)
+
+
+    def stacklearning(self):
+        def pipe
+        reg4 = LGBMRegressor(boosting_type='gbdt', num_leaves= 60,learning_rate=0.06)
+
+        class extMorgan(BaseEstimator, TransformerMixin):
+            def __init__(self):
+                pass
+
+            def fit(self, X, y=None):
+                return self
+
+            def transform(self, X):
+                _,morgan,_=sepTables(X)
+                return morgan
+        class extMACCS(BaseEstimator, TransformerMixin):
+            def __init__(self):
+                pass
+
+            def fit(self, X, y=None):
+                return self
+
+            def transform(self, X):
+                maccs,morgan,_=sepTables(X)
+                maccs = pd.concat([morgan,maccs],axis=1)
+
+                return maccs
+
+        class extDescriptor(BaseEstimator, TransformerMixin):
+            def __init__(self):
+                pass
+
+            def fit(self, X, y=None):
+                return self
+
+            def transform(self, X):
+                maccs,morgan,descriptor=sepTables(X)
+                descriptor = pd.concat([morgan,descriptor],axis=1)
+                descriptor = pd.concat([maccs,descriptor],axis=1)
+                return descriptor
+
+        class extPCA(BaseEstimator, TransformerMixin):
+            def __init__(self):
+                pass
+
+            def fit(self, X, y=None):
+                return self
+
+            def transform(self, X):
+                model = PCA(n_components=64)
+                _,morgan,_=sepTables(X)
+                morgan = morgan.reset_index().drop('index', axis=1)
+                W = pd.DataFrame(model.fit_transform(X))
+                W = pd.concat([morgan,W],axis=1)
+                return W
+
+
+
+
+        lgbm = LGBMRegressor(boosting_type='gbdt', num_leaves= 60,learning_rate=0.06)
+        rgf = RGFRegressor(max_leaf=1000, algorithm="RGF",test_interval=100, loss="LS",verbose=False,l2=1.0)
+
+        pipe1 = make_pipeline(extMACCS(), rgf)
+        pipe2 = make_pipeline(extMorgan(), rgf)
+        pipe3 = make_pipeline(extDescriptor(), rgf)
+        pipe4 = make_pipeline(extPCA(), rgf)
+
+        xgb = xgboost.XGBRegressor()
+        nbrs = KNeighborsRegressor(2)
+        svr = SVR(gamma='auto',kernel='linear')
+        sgd = SGDRegressor(max_iter=1000)
+        pls = PLSRegression(n_components=3)
+
+        pipe5 = make_pipeline(extMorgan(), nbrs)
+        pipe6 = make_pipeline(extMACCS(), rgf)
+
+
+        meta = RandomForestRegressor(max_depth=20, random_state=0, n_estimators=400)
+
+        stack1 = StackingRegressor(regressors=[pipe1, pipe2, pipe3], meta_regressor=rgf, verbose=1)
+
+        #stack2 = StackingRegressor(regressors=[stack1,nbrs, svr,pls,rgf], meta_regressor=lgbm, verbose=1)
+        stack2 = StackingRegressor(regressors=[stack1,pipe5], meta_regressor=meta, verbose=1)
+
+        stack2.fit(X_train, y_train)
+        y_pred = stack2.predict(X_train)
+        y_val = stack2.predict(X_test)
+        print("Root Mean Squared Error train: %.4f" % calcRMSE(y_pred, y_train))
+        print("Root Mean Squared Error test: %.4f" % calcRMSE(y_val, y_test))
+        print('Correlation Coefficient train: %.4f' % calcCorr(y_pred, y_train))
+        print('Correlation Coefficient test: %.4f' % calcCorr(y_val, y_test))
+
+        rgf.fit(X_train, y_train)
+        y_pred = rgf.predict(X_train)
+        y_val = rgf.predict(X_test)
+        print("Root Mean Squared Error train: %.4f" % calcRMSE(y_pred, y_train))
+        print("Root Mean Squared Error test: %.4f" % calcRMSE(y_val, y_test))
+        print('Correlation Coefficient train: %.4f' % calcCorr(y_pred, y_train))
+        print('Correlation Coefficient test: %.4f' % calcCorr(y_val, y_test))
+
+
 
         cols = np.arange(1,550,1).tolist()
         cols = X.columns.tolist()
@@ -111,7 +220,7 @@ class(object):
         print('Correlation Coefficient train: %.4f' % calcCorr(y_pred,y_train))
         print('Correlation Coefficient test: %.4f' % calcCorr(y_val,y_test))
 
-        reg4.fit(X_train, y_train)
+        rgf.fit(X_train, y_train)
         y_pred = reg4.predict(X_train)
         y_val = reg4.predict(X_test)
         print("Root Mean Squared Error train: %.4f" % calcRMSE(y_pred,y_train))
