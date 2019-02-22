@@ -101,7 +101,6 @@ class(object):
 
             def fit(self, X, y=None):
                 return self
-
             def transform(self, X):
                 _,morgan,_=sepTables(X)
                 return morgan
@@ -168,7 +167,7 @@ class(object):
         stack1 = StackingRegressor(regressors=[pipe1, pipe2, pipe3], meta_regressor=lgbm, verbose=1)
 
         #stack2 = StackingRegressor(regressors=[stack1,nbrs, svr,pls,rgf], meta_regressor=lgbm, verbose=1)
-        stack2 = StackingRegressor(regressors=[stack1,pipe5], meta_regressor=lgbm, verbose=1)
+        stack2 = StackingRegressor(regressors=[stack1,pipe5], meta_regressor=xgb, verbose=1)
 
         stack2.fit(X_train, y_train)
         y_pred = stack2.predict(X_train)
