@@ -17,8 +17,9 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import make_pipeline
+from sklearn.model_selection import cross_val_score
 
-from mlxtend.regressor import StackingRegressor
+from mlxtend.regressor import StackingRegressor,
 from mlxtend.feature_selection import ColumnSelector
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import make_pipeline
@@ -28,7 +29,6 @@ from sklearn.datasets import load_boston
 from sklearn.decomposition import PCA
 
 class(object):
-
     ejectCAS = ['10124-36-4', '108-88-3', '111991-09-4', '116-29-0', '120-12-7', '126833-17-8', '13171-21-6',
                         '1333-82-0', '137-30-4', '148-79-8', '1582-09-8', '1610-18-0', '2058-46-0', '2104-64-5',
                         '21725-46-2',
@@ -112,7 +112,6 @@ class(object):
             def predict(self, X):
                 return self
 
-
         class extMorgan(BaseEstimator, TransformerMixin):
             def __init__(self):
                 pass
@@ -171,7 +170,6 @@ class(object):
         rgf3 = RGFRegressor(max_leaf=1000, algorithm="RGF",test_interval=100, loss="LS",verbose=False,l2=1.0)
         rgf4 = RGFRegressor(max_leaf=1000, algorithm="RGF",test_interval=100, loss="LS",verbose=False,l2=1.0)
 
-
         pipe1 = make_pipeline(extMACCS(), rgf)
         pipe2 = make_pipeline(extMorgan(), rgf1)
         pipe3 = make_pipeline(extDescriptor(), rgf2)
@@ -184,20 +182,22 @@ class(object):
         svr = SVR(gamma='auto',kernel='linear')
         sgd = SGDRegressor(max_iter=1000)
         pls = PLSRegression(n_components=3)
-
+        ext = ExtraTreesRegressor(n_estimators=30,max_features= 20,min_samples_split= 5,max_depth= 50, min_samples_leaf= 5)
 
         pipe5 = make_pipeline(extMorgan(), nbrs)
-
         pipe6 = make_pipeline(extMACCS(), rgf)
         alldata = make_pipeline(extAll())
-
 
         meta = RandomForestRegressor(max_depth=20, random_state=0, n_estimators=400)
 
         stack1 = StackingRegressor(regressors=[pipe1, pipe2, pipe3], meta_regressor=rgf, verbose=1)
-
         #stack2 = StackingRegressor(regressors=[stack1,nbrs, svr,pls,rgf], meta_regressor=lgbm, verbose=1)
-        stack2 = StackingRegressor(regressors=[stack1,pipe5,pipe7,pipe1], meta_regressor=meta, verbose=1)
+        stack2 = StackingRegressor(regressors=[stack1,pipe5,pipe7,pipe1], meta_regressor=rgf,verbose=1)
+
+        scores = cross_val_score(stack2, X, y, cv=10)
+        print("R^2 Score: %0.2f (+/- %0.2f) [%s]" % (scores.mean(), scores.std(), 'stacking'))
+        stack1_score = cross_val_score(stack1,X,y, cv=10)
+        rgf_score = cross_val_score(rgf,X,y,cv=10)
 
         stack2.fit(X_train, y_train)
         y_pred = stack2.predict(X_train)
