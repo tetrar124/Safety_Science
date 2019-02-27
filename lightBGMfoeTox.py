@@ -19,7 +19,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import cross_val_score
 
-from mlxtend.regressor import StackingRegressor,
+from mlxtend.regressor import StackingRegressor
 from mlxtend.feature_selection import ColumnSelector
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import make_pipeline
