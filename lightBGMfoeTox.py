@@ -17,16 +17,19 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import make_pipeline
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_validate,ShuffleSplit
 
 from mlxtend.regressor import StackingRegressor
 from mlxtend.feature_selection import ColumnSelector
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin,RegressorMixin
 from sklearn.pipeline import make_pipeline
 import scipy as sp
 from sklearn.preprocessing import normalize
 from sklearn.datasets import load_boston
 from sklearn.decomposition import PCA
+
+
+
 
 class(object):
     ejectCAS = ['10124-36-4', '108-88-3', '111991-09-4', '116-29-0', '120-12-7', '126833-17-8', '13171-21-6',
@@ -99,7 +102,7 @@ class(object):
 
 
     def stacklearning(self):
-        class extAll(BaseEstimator, TransformerMixin):
+        class extAverage(BaseEstimator, TransformerMixin,RegressorMixin):
             def __init__(self):
                 pass
 
@@ -110,7 +113,20 @@ class(object):
                 return self
 
             def predict(self, X):
+                result = np.average(X, axis = 1)
+                return result
+        class extAll(BaseEstimator, TransformerMixin,RegressorMixin):
+            def __init__(self):
+                pass
+
+            def fit(self, X, y=None):
                 return self
+
+            def transform(self, X):
+                return self
+
+            def predict(self, X):
+                return X
 
         class extMorgan(BaseEstimator, TransformerMixin):
             def __init__(self):
@@ -184,20 +200,33 @@ class(object):
         pls = PLSRegression(n_components=3)
         ext = ExtraTreesRegressor(n_estimators=30,max_features= 20,min_samples_split= 5,max_depth= 50, min_samples_leaf= 5)
 
-        pipe5 = make_pipeline(extMorgan(), nbrs)
+        nbrsPipe = make_pipeline(extMorgan(), nbrs)
         pipe6 = make_pipeline(extMACCS(), rgf)
         alldata = make_pipeline(extAll())
+        ave = extAverage()
 
         meta = RandomForestRegressor(max_depth=20, random_state=0, n_estimators=400)
+        #stack1 = StackingRegressor(regressors=[rgf, nbrs, alldata], meta_regressor=rgf, verbose=1)
+        stack1 = StackingRegressor(regressors=[pipe1,pipe2,pipe3,xgb,lgbm,], meta_regressor=ave, verbose=1)
 
-        stack1 = StackingRegressor(regressors=[pipe1, pipe2, pipe3], meta_regressor=rgf, verbose=1)
         #stack2 = StackingRegressor(regressors=[stack1,nbrs, svr,pls,rgf], meta_regressor=lgbm, verbose=1)
-        stack2 = StackingRegressor(regressors=[stack1,pipe5,pipe7,pipe1], meta_regressor=rgf,verbose=1)
+        stack1 = StackingRegressor(regressors=[pipe1,pipe2,pipe3,], meta_regressor=rgf, verbose=1)
+        stack2 = StackingRegressor(regressors=[stack1,alldata,nbrsPipe], meta_regressor=ext,verbose=1)
 
-        scores = cross_val_score(stack2, X, y, cv=10)
-        print("R^2 Score: %0.2f (+/- %0.2f) [%s]" % (scores.mean(), scores.std(), 'stacking'))
-        stack1_score = cross_val_score(stack1,X,y, cv=10)
-        rgf_score = cross_val_score(rgf,X,y,cv=10)
+
+        cv = ShuffleSplit(n_splits=10, test_size=0.1, random_state=0)
+        cv = KFold(n_splits=10, shuffle=True, random_state=0)
+
+
+        stack1Score = cross_validate(stack1, X, y, cv=cv)
+        stack1Score['test_score'].mean()
+
+        rgfScores = cross_validate(rgf,X,y,cv=cv)
+        rgfScores['test_score'].mean()
+
+        scores = cross_validate(stack2,X,y,cv=cv)
+        scores['test_score'].mean()
+        print("R^2 Score: %0.2f (+/- %0.2f) [%s]" % (scores['test_score'].mean(), scores['test_score'].std(), 'stacking'))
 
         stack2.fit(X_train, y_train)
         y_pred = stack2.predict(X_train)
