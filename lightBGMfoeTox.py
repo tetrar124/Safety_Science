@@ -207,10 +207,10 @@ class(object):
 
         meta = RandomForestRegressor(max_depth=20, random_state=0, n_estimators=400)
         #stack1 = StackingRegressor(regressors=[rgf, nbrs, alldata], meta_regressor=rgf, verbose=1)
-        stack1 = StackingRegressor(regressors=[pipe1,pipe2,pipe3,xgb,lgbm,], meta_regressor=ave, verbose=1)
+        stack = StackingRegressor(regressors=[pipe1,pipe2,pipe3,xgb,lgbm,], meta_regressor=ave, verbose=1)
 
         #stack2 = StackingRegressor(regressors=[stack1,nbrs, svr,pls,rgf], meta_regressor=lgbm, verbose=1)
-        stack1 = StackingRegressor(regressors=[pipe1,pipe2,pipe3,], meta_regressor=rgf, verbose=1)
+        stack1 = StackingRegressor(regressors=[pipe1,pipe2,pipe3], meta_regressor=rgf, verbose=1)
         stack2 = StackingRegressor(regressors=[stack1,alldata,nbrsPipe], meta_regressor=ext,verbose=1)
 
 
@@ -218,8 +218,8 @@ class(object):
         cv = KFold(n_splits=10, shuffle=True, random_state=0)
 
 
-        stack1Score = cross_validate(stack1, X, y, cv=cv)
-        stack1Score['test_score'].mean()
+        stackScore = cross_validate(stack, X, y, cv=cv)
+        stackScore['test_score'].mean()
 
         rgfScores = cross_validate(rgf,X,y,cv=cv)
         rgfScores['test_score'].mean()
