@@ -209,6 +209,10 @@ class(object):
         #stack1 = StackingRegressor(regressors=[rgf, nbrs, alldata], meta_regressor=rgf, verbose=1)
         stack = StackingRegressor(regressors=[pipe1,pipe2,pipe3,xgb,lgbm,], meta_regressor=ave, verbose=1)
 
+
+        stack = StackingRegressor(regressors=[pipe1,pipe2,pipe3,xgb,lgbm,], meta_regressor=ave, verbose=1)
+
+
         #stack2 = StackingRegressor(regressors=[stack1,nbrs, svr,pls,rgf], meta_regressor=lgbm, verbose=1)
         stack1 = StackingRegressor(regressors=[pipe1,pipe2,pipe3], meta_regressor=rgf, verbose=1)
         stack2 = StackingRegressor(regressors=[stack1,alldata,nbrsPipe], meta_regressor=ext,verbose=1)
