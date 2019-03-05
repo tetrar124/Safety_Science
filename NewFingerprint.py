@@ -19,26 +19,27 @@ def extSpecialTox(self):
     # os.chdir(r'G:\マイドライブ\Data\tox_predict\all_data')
     # df = pd.read_csv('structure_result.csv', engine='python', encoding='cp932')
     #慢性毒性
-    
+    os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
+    df = pd.read_csv('extChronicStrcture.csv')
 
     #df = df[['CAS', '化学物質名', '毒性値', '暴露時間（日）', '生物種', '栄養段階']]
     #カーバメート
-    carbamateDf = df[df['CAS'].isin(['22781-23-3','16752-77-5','112410-23-8',\
-                             '161050-58-4','79127-80-3','82560-54-1',\
-                             '65907-30-4','114-26-1','55285-14-8','63-25-2',\
-                             '1129-41-5','116-06-3','143807-66-3','23103-98-2',\
-                             '2631-40-5','3766-81-2','1563-66-2','59669-26-0',\
-                             '29973-13-5','28217-97-2','2686-99-9','78-57-9'])]
-    carbameteSMILES = carbamateDf['CAS','canonical_smiles']
+    #carbamateDf = df[df['CAS'].isin(['22781-23-3','16752-77-5','112410-23-8',\
+                             # '161050-58-4','79127-80-3','82560-54-1',\
+                             # '65907-30-4','114-26-1','55285-14-8','63-25-2',\
+                             # '1129-41-5','116-06-3','143807-66-3','23103-98-2',\
+                             # '2631-40-5','3766-81-2','1563-66-2','59669-26-0',\
+                             # '29973-13-5','28217-97-2','2686-99-9','78-57-9'])]
+    #carbameteSMILES = carbamateDf['CAS','canonical_smiles']
     # 有機リン
-    exDfP = df[df['CAS'].isin(['115-86-6', '126-73-8', '141-66-2', '298-07-7', '300-76-5',
-            '34364-42-6', '62-73-7', '107-66-4', '1241-94-7', '13171-21-6',
-            '2528-36-1', '29761-21-5', '311-45-5', '3689-24-5', '470-90-6',
-            '598-02-7', '68333-79-9', '6923-22-4', '7722-88-5', '96300-97-9',
-            '10042-91-8', '107-49-3', '512-56-1', '5598-15-2', '7558-80-7',
-            '7601-54-9', '7783-28-0', '96300-95-7'])]
+    # exDfP = df[df['CAS'].isin(['115-86-6', '126-73-8', '141-66-2', '298-07-7', '300-76-5',
+    #         '34364-42-6', '62-73-7', '107-66-4', '1241-94-7', '13171-21-6',
+    #         '2528-36-1', '29761-21-5', '311-45-5', '3689-24-5', '470-90-6',
+    #         '598-02-7', '68333-79-9', '6923-22-4', '7722-88-5', '96300-97-9',
+    #         '10042-91-8', '107-49-3', '512-56-1', '5598-15-2', '7558-80-7',
+    #         '7601-54-9', '7783-28-0', '96300-95-7'])]
 
-    carbameteSMILES.to_csv('carbameteSMILES.csv')
+    #carbameteSMILES.to_csv('carbameteSMILES.csv')
     #カーバメート
     carbamateInsets=['OC(=O)NC([H])([H])[H]','C([H])([H])([H])NC(=O)O',
                      'NN(C(=O))C(C([H])([H])[H])(C([H])([H])[H])C([H])([H])[H]','NC(=S)N',
@@ -57,7 +58,7 @@ def extSpecialTox(self):
     #有機ヒ素
     organicAss = ['C[AS','N[AS','S[AS']
 
-    columns = ['CAS'] + np.arange(0,57,1).tolist()
+    columns = ['CAS'] + np.arange(0,59,1).tolist()
     resultDf = pd.DataFrame(columns=columns)
     for i,(cas,smiles) in enumerate(zip(df['CAS'],df['canonical_smiles'])):
         if pd.isnull(smiles)==True:
@@ -76,7 +77,15 @@ def extSpecialTox(self):
                         print('金属',smiles,metalName)
                     else:
                         keys.append(0)
+                #電離
+                if smiles.count('.') > 0:
+                    keys.append(1)
+                    print('金属', smiles, metalName)
+                else:
+                    keys.append(0)
 
+
+                #有機塩素
                 templist = []
                 for organicCl in organicCls:
                     if smiles.count(organicCl) > 0:
@@ -120,8 +129,17 @@ def extSpecialTox(self):
                     keys.append(1)
                 else:
                     keys.append(0)
+                #ジフェニルエーテル
+                tmpCar = Chem.MolFromSmiles('C1=C(OC2=CC=CC=C2)C=CC=C1')
+                ph_mols = base_mol.HasSubstructMatch(tmpCar)
+                if ph_mols == True:
+                    keys.append(1)
+                else:
+                    keys.append(0)
+
                 tempDf = pd.DataFrame(data = [keys],columns=columns)
                 resultDf = pd.concat([resultDf,tempDf])
+    resultDf.to_csv('newFingerprint.csv',index=False)
 
     for i,  smiles in enumerate(carbamateInsets):
     #for  i ,smiles in enumerate(organicPhosphoricAcids):

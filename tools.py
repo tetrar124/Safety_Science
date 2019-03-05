@@ -622,8 +622,11 @@ class tools(object):
         df1 = df1.drop(['toxValue','logTox'],axis=1)
         df2 = pd.read_csv('chronicMorgan.csv',index_col = 'CAS')
         df3 = pd.read_csv('Descriptors.csv',index_col='CAS')
-        df3 = pd.concat([df1, df2,df3], axis = 1, join = 'inner')
-        df3.to_csv('MorganMACCS.csv')
+        df4 = pd.read_csv('newFingerprint.csv',index_col='CAS')
+        dfResult = pd.concat([df1,df2,df3,df4], axis = 1, join = 'inner')
+        dfResult.to_csv('fishMorganMACCS.csv')
+
+
     def getDiscriptor(self):
         from rdkit.Chem import Crippen
         from rdkit import Chem

@@ -942,7 +942,7 @@ if __name__ == '__main__':
         # # cl.mergeCalcTox()
         cl.NewMergeCalcTox()
         cl.connectNames()
-        # #os.chdir(r"C:\OneDrive\公開\勝さん共有\リン酸")
+        # #os.chdir(r"C:\OneDrive\公開\To共有\リン酸")
         df2 = pd.read_csv('predict08withName.csv').drop(['cluster'],axis=1)
         # # #cl.calcWeightAverageDf(df2,'weightedAverageDropMax')
         cl.calcWeightAverageDf(df2,'weightedAverageDropLarge')

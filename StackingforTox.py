@@ -28,8 +28,7 @@ from sklearn.preprocessing import normalize
 from sklearn.datasets import load_boston
 from sklearn.decomposition import PCA
 
-
-
+from bayes_opt import BayesianOptimization
 
 class(object):
     ejectCAS = ['10124-36-4', '108-88-3', '111991-09-4', '116-29-0', '120-12-7', '126833-17-8', '13171-21-6',
@@ -67,13 +66,17 @@ class(object):
         MACCS = xdf.iloc[:,0:key]
         Morgan = xdf.iloc[:,key:key+512]
         descriptors = xdf.iloc[:,key+512:690]
+        newFingerprint = xdf.iloc[:,690:]
         #similarity = xdf.iloc[:,690:]
-        #print(MACCS.shape,Morgan.shape,descriptors.shape)
-        return MACCS,Morgan,descriptors
-
+        tables = []
+        # for table in [MACCS,Morgan,descriptors,newFingerprint]:
+        #     table = table[table.columns[table.sum()!=0]]
+        #     tables.append(table)
+        #return tables[0],tables[1],tables[2],tables[3]
+        return MACCS,Morgan,descriptors,newFingerprint
     def test(self):
         os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
-        df =pd.read_csv('MorganMACCS.csv')
+        df =pd.read_csv('fishMorganMACCS.csv')
         #df2=pd.read_csv('chronicMACCSKeys_tanimoto.csv')
         #df2 = df2.drop(ejectCAS,axis=1).set_index('CAS').dropna(how='all', axis=1)
         baseDf = df
@@ -136,7 +139,7 @@ class(object):
                 return self
 
             def transform(self, X):
-                _,morgan,_=sepTables(X)
+                _,morgan,_,_=sepTables(X)
                 return morgan
         class extMACCS(BaseEstimator, TransformerMixin):
             def __init__(self):
@@ -146,7 +149,7 @@ class(object):
                 return self
 
             def transform(self, X):
-                maccs,morgan,_=sepTables(X)
+                maccs,morgan,_,_=sepTables(X)
                 maccs = pd.concat([morgan,maccs],axis=1)
 
                 return maccs
@@ -159,7 +162,7 @@ class(object):
                 return self
 
             def transform(self, X):
-                maccs,morgan,descriptor=sepTables(X)
+                maccs,morgan,descriptor,_=sepTables(X)
                 descriptor = pd.concat([morgan,descriptor],axis=1)
                 descriptor = pd.concat([maccs,descriptor],axis=1)
                 return descriptor
@@ -173,22 +176,19 @@ class(object):
 
             def transform(self, X):
                 model = PCA(n_components=64)
-                _,morgan,_=sepTables(X)
+                _,morgan,_,_=sepTables(X)
                 morgan = morgan.reset_index().drop('index', axis=1)
                 W = pd.DataFrame(model.fit_transform(X))
                 W = pd.concat([morgan,W],axis=1)
                 return W
 
         lgbm = LGBMRegressor(boosting_type='gbdt', num_leaves= 60,learning_rate=0.06)
-        rgf = RGFRegressor(max_leaf=1000, algorithm="RGF",test_interval=100, loss="LS",verbose=False,l2=1.0)
-        rgf1 = RGFRegressor(max_leaf=1000, algorithm="RGF",test_interval=100, loss="LS",verbose=False,l2=1.0)
-        rgf2 = RGFRegressor(max_leaf=1000, algorithm="RGF",test_interval=100, loss="LS",verbose=False,l2=1.0)
-        rgf3 = RGFRegressor(max_leaf=1000, algorithm="RGF",test_interval=100, loss="LS",verbose=False,l2=1.0)
-        rgf4 = RGFRegressor(max_leaf=1000, algorithm="RGF",test_interval=100, loss="LS",verbose=False,l2=1.0)
+        rf = RandomForestRegressor(max_depth=20, random_state=0, n_estimators=400)
 
-        pipe1 = make_pipeline(extMACCS(), rgf)
-        pipe2 = make_pipeline(extMorgan(), rgf1)
-        pipe3 = make_pipeline(extDescriptor(), rgf2)
+        pipe1 = make_pipeline(extMACCS(), rf)
+        pipe2 = make_pipeline(extMorgan(), rf)
+        pipe3 = make_pipeline(extDescriptor(), rf)
+
         pipe4 = make_pipeline(extPCA(), rgf3)
         pipe7 =make_pipeline(extDescriptor(), rgf4)
         pipe8 =make_pipeline(extDescriptor(), rgf4)
@@ -209,9 +209,7 @@ class(object):
         #stack1 = StackingRegressor(regressors=[rgf, nbrs, alldata], meta_regressor=rgf, verbose=1)
         stack = StackingRegressor(regressors=[pipe1,pipe2,pipe3,xgb,lgbm,], meta_regressor=ave, verbose=1)
 
-
-        stack = StackingRegressor(regressors=[pipe1,pipe2,pipe3,xgb,lgbm,], meta_regressor=ave, verbose=1)
-
+        stack = StackingRegressor(regressors=[pipe1,pipe2,pipe3,xgb,lgbm,rgf], meta_regressor=ave, verbose=1)
 
         #stack2 = StackingRegressor(regressors=[stack1,nbrs, svr,pls,rgf], meta_regressor=lgbm, verbose=1)
         stack1 = StackingRegressor(regressors=[pipe1,pipe2,pipe3], meta_regressor=rgf, verbose=1)
@@ -223,10 +221,13 @@ class(object):
 
 
         stackScore = cross_validate(stack, X, y, cv=cv)
-        stackScore['test_score'].mean()
+        stackScore['test_score'].mean()**(1/2)
 
         rgfScores = cross_validate(rgf,X,y,cv=cv)
-        rgfScores['test_score'].mean()
+        rgfScores['test_score'].mean()**(1/2)
+
+        RFScores = cross_validate(meta,X,y,cv=cv)
+        RFScores['test_score'].mean()**(1/2)
 
         scores = cross_validate(stack2,X,y,cv=cv)
         scores['test_score'].mean()
