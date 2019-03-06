@@ -40,7 +40,32 @@ class(object):
                         '62-53-3', '6317-18-6', '69-72-7', '7440-02-0', '7447-40-7', '7722-84-1', '7733-02-0', '7758-94-3',
                         '80844-07-1', '82657-04-3', '84852-15-3', '86-73-7', '9016-45-9', '99-35-4']
     os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
+    def optimizeRF(self):
+        cv = KFold(n_splits=10, shuffle=True, random_state=0)
+        def randomforest_cv(n_estimators, min_samples_split, max_features):
+            score = cross_validate(
+                RandomForestRegressor(
+                    n_estimators=int(n_estimators),
+                    min_samples_split=int(min_samples_split),
+                    max_features=max_features,
+                    random_state=0
+                ),
+                X, y,
+                scoring='neg_mean_squared_error',
+                cv=cv,n_jobs=-1)
+            val = score['test_score'].mean()**(1/2)
+            return val
 
+        randomforest_cv_bo = BayesianOptimization(
+                randomforest_cv,
+                {'n_estimators': (10, 250),
+                 'min_samples_split': (2, 25),
+                 'max_features': (0.1, 0.999)}
+            )
+        gp_params = {"alpha": 1e-5}
+        randomforest_cv_bo.maximize(n_iter=50, **gp_params)
+        print(randomforest_cv_bo.res['max']['max_val'])
+        print(randomforest_cv_bo.res['max']['max_params'])
 
     def calcRMSE(pred,real):
       RMSE = (np.sum((pred-real.tolist())**2)/len(pred))**(1/2)
@@ -121,33 +146,26 @@ class(object):
         class extAll(BaseEstimator, TransformerMixin,RegressorMixin):
             def __init__(self):
                 pass
-
             def fit(self, X, y=None):
                 return self
-
             def transform(self, X):
                 return self
-
             def predict(self, X):
                 return X
 
         class extMorgan(BaseEstimator, TransformerMixin):
             def __init__(self):
                 pass
-
             def fit(self, X, y=None):
                 return self
-
             def transform(self, X):
                 _,morgan,_,_=sepTables(X)
                 return morgan
         class extMACCS(BaseEstimator, TransformerMixin):
             def __init__(self):
                 pass
-
             def fit(self, X, y=None):
                 return self
-
             def transform(self, X):
                 maccs,morgan,_,_=sepTables(X)
                 maccs = pd.concat([morgan,maccs],axis=1)
@@ -157,10 +175,8 @@ class(object):
         class extDescriptor(BaseEstimator, TransformerMixin):
             def __init__(self):
                 pass
-
             def fit(self, X, y=None):
                 return self
-
             def transform(self, X):
                 maccs,morgan,descriptor,_=sepTables(X)
                 descriptor = pd.concat([morgan,descriptor],axis=1)
@@ -170,10 +186,8 @@ class(object):
         class extPCA(BaseEstimator, TransformerMixin):
             def __init__(self):
                 pass
-
             def fit(self, X, y=None):
                 return self
-
             def transform(self, X):
                 model = PCA(n_components=64)
                 _,morgan,_,_=sepTables(X)
@@ -182,11 +196,12 @@ class(object):
                 W = pd.concat([morgan,W],axis=1)
                 return W
 
+        rgf = RGFRegressor()
         lgbm = LGBMRegressor(boosting_type='gbdt', num_leaves= 60,learning_rate=0.06)
         rf = RandomForestRegressor(max_depth=20, random_state=0, n_estimators=400)
 
-        pipe1 = make_pipeline(extMACCS(), rf)
-        pipe2 = make_pipeline(extMorgan(), rf)
+        pipe1 = make_pipeline(extMACCS(), rg)
+        pipe2 = make_pipeline(extMorgan(), rg)
         pipe3 = make_pipeline(extDescriptor(), rf)
 
         pipe4 = make_pipeline(extPCA(), rgf3)
@@ -213,12 +228,16 @@ class(object):
 
         #stack2 = StackingRegressor(regressors=[stack1,nbrs, svr,pls,rgf], meta_regressor=lgbm, verbose=1)
         stack1 = StackingRegressor(regressors=[pipe1,pipe2,pipe3], meta_regressor=rgf, verbose=1)
-        stack2 = StackingRegressor(regressors=[stack1,alldata,nbrsPipe], meta_regressor=ext,verbose=1)
-
+        stack2 = StackingRegressor(regressors=[stack1,alldata,rgf,lgbm], meta_regressor=rf,verbose=1)
+        stack3 = StackingRegressor(regressors=[stack2, rf], meta_regressor=ave, verbose=1)
 
         cv = ShuffleSplit(n_splits=10, test_size=0.1, random_state=0)
         cv = KFold(n_splits=10, shuffle=True, random_state=0)
+        St2Scores = cross_validate(stack3,X,y,cv=cv)
+        St2Scores['test_score'].mean()**(1/2)
 
+        St3Scores = cross_validate(stack3,X,y,cv=cv)
+        St3Scores['test_score'].mean()**(1/2)
 
         stackScore = cross_validate(stack, X, y, cv=cv)
         stackScore['test_score'].mean()**(1/2)
@@ -230,7 +249,7 @@ class(object):
         RFScores['test_score'].mean()**(1/2)
 
         scores = cross_validate(stack2,X,y,cv=cv)
-        scores['test_score'].mean()
+        scores['test_score'].mean()**(1/2)
         print("R^2 Score: %0.2f (+/- %0.2f) [%s]" % (scores['test_score'].mean(), scores['test_score'].std(), 'stacking'))
 
         stack2.fit(X_train, y_train)
