@@ -53,19 +53,71 @@ class(object):
                 X, y,
                 scoring='neg_mean_squared_error',
                 cv=cv,n_jobs=-1)
-            val = score['test_score'].mean()**(1/2)
+            val = score['test_score'].mean()
             return val
-
-        randomforest_cv_bo = BayesianOptimization(
+        opt = BayesianOptimization(
                 randomforest_cv,
                 {'n_estimators': (10, 250),
                  'min_samples_split': (2, 25),
                  'max_features': (0.1, 0.999)}
             )
-        gp_params = {"alpha": 1e-5}
-        randomforest_cv_bo.maximize(n_iter=50, **gp_params)
-        print(randomforest_cv_bo.res['max']['max_val'])
-        print(randomforest_cv_bo.res['max']['max_params'])
+        opt.maximize(init_points=10,n_iter=50)
+        opt.max
+    def optimizeRGF(self):
+        cv = KFold(n_splits=10, shuffle=True, random_state=0)
+        def RGF_cv(max_leaf, l2, min_samples_leaf):
+            score = cross_validate(
+                RGFRegressor(
+                    max_leaf=int(max_leaf),
+                    algorithm="RGF",
+                    test_interval=100,
+                    loss="LS",
+                    verbose=False,
+                    l2=l2,
+                    min_samples_leaf = int(min_samples_leaf)
+                ),
+                X, y,
+                scoring='neg_mean_squared_error',
+                cv=cv,n_jobs=-1)
+            val = score['test_score'].mean()
+            return val
+        opt = BayesianOptimization(
+                RGF_cv,
+                {'max_leaf': (100, 2000),
+                 'l2': (0.1, 1),
+                 'min_samples_leaf': (1,20)}
+            )
+        opt.maximize(init_points=20,n_iter=100)
+        opt.max
+    def optimizeLightGBM(self):
+        cv = KFold(n_splits=10, shuffle=True, random_state=0)
+        def LGBM_cv(num_leaves,feature_fraction, bagging_fraction, min_data_in_leaf,max_depth):
+            score = cross_validate(
+                LGBMRegressor(
+                    boosting_type='gbdt',
+                    num_leaves = int(num_leaves),
+                    feature_fraction = feature_fraction,
+                    bagging_fraction=bagging_fraction,
+                    learning_rate=0.06,
+                    min_data_in_leaf = int(min_data_in_leaf),
+                    max_depth=int(max_depth)
+                ),
+                X, y,
+                scoring='neg_mean_squared_error',
+                cv=cv,n_jobs=-1)
+            val = score['test_score'].mean()
+            return val
+        opt = BayesianOptimization(
+                LGBM_cv,
+                {'min_data_in_leaf': (0, 300),
+                 'feature_fraction': (0.01, 1),
+                 'max_depth': (7,50),
+                 'num_leaves':(100,3000),
+                 'bagging_fraction' :(0.01,1)
+                 }
+            )
+        opt.maximize(init_points=20,n_iter=100)
+        opt.max
 
     def calcRMSE(pred,real):
       RMSE = (np.sum((pred-real.tolist())**2)/len(pred))**(1/2)
@@ -101,11 +153,14 @@ class(object):
         return MACCS,Morgan,descriptors,newFingerprint
     def test(self):
         os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
-        df =pd.read_csv('fishMorganMACCS.csv')
+        df =pd.read_csv(r'fishMorganMACCS.csv')
         #df2=pd.read_csv('chronicMACCSKeys_tanimoto.csv')
         #df2 = df2.drop(ejectCAS,axis=1).set_index('CAS').dropna(how='all', axis=1)
         baseDf = df
-        extractDf =  df['CAS'].isin(ejectCAS)
+        extractDf =  df[df['CAS'].isin(ejectCAS)]
+        exy = extractDf['logTox']
+        exX = extractDf.drop(columns=['CAS','toxValue','logTox'])
+
         df = df[~df['CAS'].isin(ejectCAS)]
         #df = df.set_index('CAS')
         #df = pd.concat([df,df2],axis=1, join_axes=[df.index]).reset_index()
@@ -159,7 +214,8 @@ class(object):
             def fit(self, X, y=None):
                 return self
             def transform(self, X):
-                _,morgan,_,_=sepTables(X)
+                _,morgan,_,newFingerprint=sepTables(X)
+                morgan = pd.concat([morgan,newFingerprint],axis=1)
                 return morgan
         class extMACCS(BaseEstimator, TransformerMixin):
             def __init__(self):
@@ -167,8 +223,8 @@ class(object):
             def fit(self, X, y=None):
                 return self
             def transform(self, X):
-                maccs,morgan,_,_=sepTables(X)
-                maccs = pd.concat([morgan,maccs],axis=1)
+                maccs,morgan,_,newFingerprint=sepTables(X)
+                maccs = pd.concat([morgan,maccs,newFingerprint],axis=1)
 
                 return maccs
 
@@ -178,9 +234,9 @@ class(object):
             def fit(self, X, y=None):
                 return self
             def transform(self, X):
-                maccs,morgan,descriptor,_=sepTables(X)
+                maccs,morgan,descriptor,newFingerprint=sepTables(X)
                 descriptor = pd.concat([morgan,descriptor],axis=1)
-                descriptor = pd.concat([maccs,descriptor],axis=1)
+                descriptor = pd.concat([maccs,descriptor,newFingerprint],axis=1)
                 return descriptor
 
         class extPCA(BaseEstimator, TransformerMixin):
@@ -196,17 +252,23 @@ class(object):
                 W = pd.concat([morgan,W],axis=1)
                 return W
 
-        rgf = RGFRegressor()
-        lgbm = LGBMRegressor(boosting_type='gbdt', num_leaves= 60,learning_rate=0.06)
-        rf = RandomForestRegressor(max_depth=20, random_state=0, n_estimators=400)
+        lgbm = LGBMRegressor(boosting_type='gbdt', num_leaves=367,
+                             learning_rate=0.06,feature_fraction=0.14,
+                             max_depth=28, min_data_in_leaf=8
+                             )
+        rgf = RGFRegressor(max_leaf=1211, algorithm="RGF", test_interval=100,
+                           loss="LS", verbose=False, l2=0.93,
+                           min_samples_leaf=2
+                           )
+        rf = RandomForestRegressor(max_depth=20, random_state=0, n_estimators=56,min_samples_split=2,max_features=0.21)
 
-        pipe1 = make_pipeline(extMACCS(), rg)
-        pipe2 = make_pipeline(extMorgan(), rg)
+        pipe1 = make_pipeline(extMACCS(), rf)
+        pipe2 = make_pipeline(extMorgan(), rf)
         pipe3 = make_pipeline(extDescriptor(), rf)
 
-        pipe4 = make_pipeline(extPCA(), rgf3)
-        pipe7 =make_pipeline(extDescriptor(), rgf4)
-        pipe8 =make_pipeline(extDescriptor(), rgf4)
+        pipe4 = make_pipeline(extPCA(), rgf)
+        pipe7 =make_pipeline(extDescriptor(), rgf)
+        pipe8 =make_pipeline(extDescriptor(), rgf)
 
         xgb = xgboost.XGBRegressor()
         nbrs = KNeighborsRegressor(2)
@@ -222,47 +284,55 @@ class(object):
 
         meta = RandomForestRegressor(max_depth=20, random_state=0, n_estimators=400)
         #stack1 = StackingRegressor(regressors=[rgf, nbrs, alldata], meta_regressor=rgf, verbose=1)
-        stack = StackingRegressor(regressors=[pipe1,pipe2,pipe3,xgb,lgbm,], meta_regressor=ave, verbose=1)
 
-        stack = StackingRegressor(regressors=[pipe1,pipe2,pipe3,xgb,lgbm,rgf], meta_regressor=ave, verbose=1)
+        stack = StackingRegressor(regressors=[pipe1,pipe2,pipe3,xgb,lgbm,rgf,rf], meta_regressor=ave, verbose=1)
 
         #stack2 = StackingRegressor(regressors=[stack1,nbrs, svr,pls,rgf], meta_regressor=lgbm, verbose=1)
-        stack1 = StackingRegressor(regressors=[pipe1,pipe2,pipe3], meta_regressor=rgf, verbose=1)
-        stack2 = StackingRegressor(regressors=[stack1,alldata,rgf,lgbm], meta_regressor=rf,verbose=1)
-        stack3 = StackingRegressor(regressors=[stack2, rf], meta_regressor=ave, verbose=1)
+
+        #0.71######################
+        stack1 = StackingRegressor(regressors=[pipe1,pipe2,pipe3], meta_regressor=rf, verbose=1)
+        stack2 = StackingRegressor(regressors=[stack1,alldata,rgf,lgbm,xgb], meta_regressor=rf,verbose=1)
+        stack3 = StackingRegressor(regressors=[stack2,rf], meta_regressor=ave, verbose=1)
+        ###########################
 
         cv = ShuffleSplit(n_splits=10, test_size=0.1, random_state=0)
         cv = KFold(n_splits=10, shuffle=True, random_state=0)
-        St2Scores = cross_validate(stack3,X,y,cv=cv)
+        St2Scores = cross_validate(stack2,X,y,cv=cv)
         St2Scores['test_score'].mean()**(1/2)
-
+        St2Scores['test_score'].mean() ** (1 / 2)
         St3Scores = cross_validate(stack3,X,y,cv=cv)
         St3Scores['test_score'].mean()**(1/2)
 
         stackScore = cross_validate(stack, X, y, cv=cv)
         stackScore['test_score'].mean()**(1/2)
 
+        lgbmScores =cross_validate(lgbm,X,y,cv=cv)
+        lgbmScores['test_score'].mean()**(1/2)
+
         rgfScores = cross_validate(rgf,X,y,cv=cv)
         rgfScores['test_score'].mean()**(1/2)
 
-        RFScores = cross_validate(meta,X,y,cv=cv)
+        RFScores = cross_validate(rf,X,y,cv=cv)
         RFScores['test_score'].mean()**(1/2)
 
         scores = cross_validate(stack2,X,y,cv=cv)
         scores['test_score'].mean()**(1/2)
         print("R^2 Score: %0.2f (+/- %0.2f) [%s]" % (scores['test_score'].mean(), scores['test_score'].std(), 'stacking'))
 
-        stack2.fit(X_train, y_train)
-        y_pred = stack2.predict(X_train)
-        y_val = stack2.predict(X_test)
+        stack3.fit(X_train, y_train)
+        y_pred = stack3.predict(X_train)
+        y_val = stack3.predict(X_test)
+        stack3.score(X_train, y_train)
+        valy =  (10 **(stack3.predict(exX))).tolist()
         print("Root Mean Squared Error train: %.4f" % calcRMSE(y_pred, y_train))
         print("Root Mean Squared Error test: %.4f" % calcRMSE(y_val, y_test))
         print('Correlation Coefficient train: %.4f' % calcCorr(y_pred, y_train))
         print('Correlation Coefficient test: %.4f' % calcCorr(y_val, y_test))
 
-        rgf.fit(X_train, y_train)
-        y_pred = rgf.predict(X_train)
-        y_val = rgf.predict(X_test)
+        rf.fit(X_train, y_train)
+        y_pred = rf.predict(X_train)
+        y_val = rf.predict(X_test)
+        valy =  (10 **(rf.predict(exX))).tolist()
         print("Root Mean Squared Error train: %.4f" % calcRMSE(y_pred, y_train))
         print("Root Mean Squared Error test: %.4f" % calcRMSE(y_val, y_test))
         print('Correlation Coefficient train: %.4f' % calcCorr(y_pred, y_train))
@@ -277,37 +347,3 @@ class(object):
         print('Correlation Coefficient test: %.4f' % calcCorr(y_val, y_test))
 
 
-        cols = np.arange(1,550,1).tolist()
-        cols = X.columns.tolist()
-        cols = [1,2,3]
-        # Initializing Classifiers
-        reg1 = Ridge(random_state=1)
-        #reg2 = ExtraTreesRegressor()
-        reg2 = ExtraTreesRegressor(n_estimators=50,max_features= 50,min_samples_split= 5,max_depth= 50, min_samples_leaf= 5)
-        reg3 = SVR(gamma='auto',kernel='linear')
-        reg4 = LGBMRegressor(boosting_type='gbdt', num_leaves= 60,learning_rate=0.06)
-        pls = PLSRegression(n_components=3)
-        pipe1 = make_pipeline(ColumnSelector(cols=cols), ExtraTreesRegressor(n_estimators=50))
-        #linear =SGDRegressor(max_iter=1000)
-        rgf = RGFRegressor(max_leaf=1000, algorithm="RGF",test_interval=100, loss="LS",verbose=False,l2=1.0)
-        nbrs = KNeighborsRegressor(2)
-        pipe2 = make_pipeline(ColumnSelector(cols=cols), KNeighborsRegressor(31))
-
-        meta = ExtraTreesRegressor(n_estimators=50,max_features= 7,min_samples_split= 5,max_depth= 50, min_samples_leaf= 5)
-
-        stackReg = StackingRegressor(regressors=[reg1,reg2, reg3,pipe1,pls,nbrs,rgf], meta_regressor=meta,verbose=1)
-        stackReg.fit(X_train, y_train)
-        y_pred = stackReg.predict(X_train)
-        y_val = stackReg.predict(X_test)
-        print("Root Mean Squared Error train: %.4f" % calcRMSE(y_pred,y_train))
-        print("Root Mean Squared Error test: %.4f" % calcRMSE(y_val,y_test))
-        print('Correlation Coefficient train: %.4f' % calcCorr(y_pred,y_train))
-        print('Correlation Coefficient test: %.4f' % calcCorr(y_val,y_test))
-
-        rgf.fit(X_train, y_train)
-        y_pred = reg4.predict(X_train)
-        y_val = reg4.predict(X_test)
-        print("Root Mean Squared Error train: %.4f" % calcRMSE(y_pred,y_train))
-        print("Root Mean Squared Error test: %.4f" % calcRMSE(y_val,y_test))
-        print('Correlation Coefficient train: %.4f' % calcCorr(y_pred,y_train))
-        print('Correlation Coefficient test: %.4f' % calcCorr(y_val,y_test))
