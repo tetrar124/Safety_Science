@@ -622,8 +622,9 @@ class tools(object):
         df1 = df1.drop(['toxValue','logTox'],axis=1)
         df2 = pd.read_csv('chronicMorgan.csv',index_col = 'CAS')
         df3 = pd.read_csv('Descriptors.csv',index_col='CAS')
-        df4 = pd.read_csv('newFingerprint.csv',index_col='CAS')
-        dfResult = pd.concat([df1,df2,df3,df4], axis = 1, join = 'inner')
+        df4 = pd.read_csv('klekotaRoth.csv',index_col= 'CAS')
+        df5 = pd.read_csv('newFingerprint.csv',index_col='CAS')
+        dfResult = pd.concat([df1,df2,df3,df4,df5], axis = 1, join = 'inner')
         dfResult.to_csv('fishMorganMACCS.csv')
 
 
@@ -698,7 +699,34 @@ class tools(object):
         finalDf['result'].sum() - finalDf['test'].sum()
 
         finalDf.to_csv('69chemicals_8978.csv')
+    def num2fingerprint(self,bitList,CAS):
+        #klekota-roth
+        nbit = 4860
+        vec = np.zeros(nbit)
+        vec[bitList] = 1
+        vecList =  [int(i) for i in vec.tolist()]
+        vecList.insert(0,CAS)
+        columns = np.arange(0,4860,1).tolist()
+        columns.insert(0,'CAS')
+        tempDf = pd.DataFrame(data=[vecList],columns=columns)
+        return tempDf
+    def CDKFingerprint(self):
+        import pandas as pd
+        import os
+        os.chdir(r"G:\マイドライブ\Data\Meram Chronic Data")
+        df = pd.read_csv('extChronicStrcture.csv',engine='python')
+        from PyFingerprint.All_Fingerprint import get_fingerprint
 
+        df = df[['CAS', 'canonical_smiles']]
+        df = df.dropna(how='any')
+        columns = np.arange(0, 4860, 1).tolist()
+        columns.insert(0, 'CAS')
+        resultDf = pd.DataFrame(columns=columns)
+        for cas,smiles in zip(df['CAS'],df['canonical_smiles']):
+            fps = get_fingerprint(smiles, fp_type='klekota-roth')
+            tempdf = self.num2fingerprint(fps,cas)
+            resultDf=pd.concat([resultDf,tempdf])
+        resultDf.to_csv('klekotaRoth.csv', index=False)
 if __name__ == '__main__':
     tool=tools()
 

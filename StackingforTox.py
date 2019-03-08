@@ -143,14 +143,15 @@ class(object):
         MACCS = xdf.iloc[:,0:key]
         Morgan = xdf.iloc[:,key:key+512]
         descriptors = xdf.iloc[:,key+512:690]
-        newFingerprint = xdf.iloc[:,690:]
+        klekotaToth = xdf.iloc[:,690:5550]
+        newFingerprint = xdf.iloc[:,5550:]
         #similarity = xdf.iloc[:,690:]
         tables = []
         # for table in [MACCS,Morgan,descriptors,newFingerprint]:
         #     table = table[table.columns[table.sum()!=0]]
         #     tables.append(table)
         #return tables[0],tables[1],tables[2],tables[3]
-        return MACCS,Morgan,descriptors,newFingerprint
+        return MACCS,Morgan,descriptors,klekotaToth,newFingerprint
     def test(self):
         os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
         df =pd.read_csv(r'fishMorganMACCS.csv')
@@ -206,7 +207,9 @@ class(object):
             def transform(self, X):
                 return self
             def predict(self, X):
-                return X
+                maccs,_,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                descriptor = pd.concat([maccs,descriptor,klekotaToth,newFingerprint],axis=1)
+                return descriptor
 
         class extMorgan(BaseEstimator, TransformerMixin):
             def __init__(self):
@@ -214,8 +217,8 @@ class(object):
             def fit(self, X, y=None):
                 return self
             def transform(self, X):
-                _,morgan,_,newFingerprint=sepTables(X)
-                morgan = pd.concat([morgan,newFingerprint],axis=1)
+                _,_,_,klekotaToth,newFingerprint=sepTables(X)
+                morgan = pd.concat([klekotaToth,newFingerprint],axis=1)
                 return morgan
         class extMACCS(BaseEstimator, TransformerMixin):
             def __init__(self):
@@ -223,8 +226,8 @@ class(object):
             def fit(self, X, y=None):
                 return self
             def transform(self, X):
-                maccs,morgan,_,newFingerprint=sepTables(X)
-                maccs = pd.concat([morgan,maccs,newFingerprint],axis=1)
+                maccs,_,_,klekotaToth,newFingerprint=sepTables(X)
+                maccs = pd.concat([maccs,klekotaToth,newFingerprint],axis=1)
 
                 return maccs
 
@@ -234,9 +237,8 @@ class(object):
             def fit(self, X, y=None):
                 return self
             def transform(self, X):
-                maccs,morgan,descriptor,newFingerprint=sepTables(X)
-                descriptor = pd.concat([morgan,descriptor],axis=1)
-                descriptor = pd.concat([maccs,descriptor,newFingerprint],axis=1)
+                maccs,_,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                descriptor = pd.concat([maccs,descriptor,klekotaToth,newFingerprint],axis=1)
                 return descriptor
 
         class extPCA(BaseEstimator, TransformerMixin):
@@ -297,6 +299,7 @@ class(object):
 
         cv = ShuffleSplit(n_splits=10, test_size=0.1, random_state=0)
         cv = KFold(n_splits=10, shuffle=True, random_state=0)
+
         St2Scores = cross_validate(stack2,X,y,cv=cv)
         St2Scores['test_score'].mean()**(1/2)
         St2Scores['test_score'].mean() ** (1 / 2)
@@ -319,7 +322,7 @@ class(object):
         scores['test_score'].mean()**(1/2)
         print("R^2 Score: %0.2f (+/- %0.2f) [%s]" % (scores['test_score'].mean(), scores['test_score'].std(), 'stacking'))
 
-        stack3.fit(X_train, y_train)
+        stack3.fit(X, y)
         y_pred = stack3.predict(X_train)
         y_val = stack3.predict(X_test)
         stack3.score(X_train, y_train)
@@ -329,7 +332,7 @@ class(object):
         print('Correlation Coefficient train: %.4f' % calcCorr(y_pred, y_train))
         print('Correlation Coefficient test: %.4f' % calcCorr(y_val, y_test))
 
-        rf.fit(X_train, y_train)
+        rf.fit(X, y)
         y_pred = rf.predict(X_train)
         y_val = rf.predict(X_test)
         valy =  (10 **(rf.predict(exX))).tolist()
@@ -338,12 +341,12 @@ class(object):
         print('Correlation Coefficient train: %.4f' % calcCorr(y_pred, y_train))
         print('Correlation Coefficient test: %.4f' % calcCorr(y_val, y_test))
 
-        pipe1.fit(X_train, y_train)
+        lgbm.fit(X, y)
         y_pred = pipe1.predict(X_train)
         y_val = pipe1.predict(X_test)
+        valy =  (10 **(lgbm.predict(exX))).tolist()
         print("Root Mean Squared Error train: %.4f" % calcRMSE(y_pred, y_train))
         print("Root Mean Squared Error test: %.4f" % calcRMSE(y_val, y_test))
         print('Correlation Coefficient train: %.4f' % calcCorr(y_pred, y_train))
         print('Correlation Coefficient test: %.4f' % calcCorr(y_val, y_test))
-
 
