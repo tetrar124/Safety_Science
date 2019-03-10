@@ -57,6 +57,7 @@ def extSpecialTox(self):
     organicCls = ['CCl', 'ClC','Cl)','NCl','ClN','SCl','ClS',')Cl']
     #有機ヒ素
     organicAss = ['C[AS','N[AS','S[AS']
+    #有機スズ
 
     columns = ['CAS'] + np.arange(0,59,1).tolist()
     resultDf = pd.DataFrame(columns=columns)
