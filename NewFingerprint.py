@@ -56,10 +56,10 @@ def extSpecialTox(self):
     #有機塩素
     organicCls = ['CCl', 'ClC','Cl)','NCl','ClN','SCl','ClS',')Cl']
     #有機ヒ素
-    organicAss = ['C[AS','N[AS','S[AS']
+    organicAss = ['C[As','N[As','S[As']
     #有機スズ
-
-    columns = ['CAS'] + np.arange(0,59,1).tolist()
+    organicSns = ['C[Sn','N[Sn','S[Sn']
+    columns = ['CAS'] + np.arange(0,60,1).tolist()
     resultDf = pd.DataFrame(columns=columns)
     for i,(cas,smiles) in enumerate(zip(df['CAS'],df['canonical_smiles'])):
         if pd.isnull(smiles)==True:
@@ -85,7 +85,6 @@ def extSpecialTox(self):
                 else:
                     keys.append(0)
 
-
                 #有機塩素
                 templist = []
                 for organicCl in organicCls:
@@ -103,6 +102,16 @@ def extSpecialTox(self):
                         templist.append(1)
                 if sum(templist) > 0:
                     print('有機ヒ素', smiles)
+                    keys.append(1)
+                else:
+                    keys.append(0)
+                #有機スズ
+                templist = []
+                for organicSn in organicSns:
+                    if smiles.count(organicSn) > 0:
+                        templist.append(1)
+                if sum(templist) > 0:
+                    print('有機スズ', smiles)
                     keys.append(1)
                 else:
                     keys.append(0)

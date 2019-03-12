@@ -152,7 +152,7 @@ class(object):
         #     tables.append(table)
         #return tables[0],tables[1],tables[2],tables[3]
         return MACCS,Morgan,descriptors,klekotaToth,newFingerprint
-    def test(self):
+    def main(self):
         os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
         df =pd.read_csv(r'fishMorganMACCS.csv')
         #df2=pd.read_csv('chronicMACCSKeys_tanimoto.csv')
@@ -170,20 +170,34 @@ class(object):
         dropList = ['CAS','toxValue','logTox']
         X = df.drop(columns=dropList)
         #Normalize
+    def normalize(X):
+        changeList = []
         for i,name in enumerate(X.columns):
             if i <679:
-                pass
+                changeList.append((0,1))
             elif i > 692:
+                changeList.append((0,1))
+            else:
+                #try:
+                #name = float(name)
+                #except:
+                std =X[name].std()
+                mean = X[name].mean()
+                X[name] = X[name].apply(lambda x: ((x - mean) * 1 / std + 0))
+                changeList.append((mean, std))
+        return X, changeList
+    def preprocess(extractDf,changeList):
+        for i, (name, calc) in enumerate(zip(extractDf.columns,changeList)):
+            #print(i, name,calc[0],calc[1])
+            if calc[0] ==0:
                 pass
             else:
-                try:
-                    name = float(name)
-                except:
-                    std =X[name].std()
-                    mean = X[name].mean()
-                    X[name] = X[name].apply(lambda x: ((x - mean) * 1 / std + 0))
-        X_train, X_test, y_train, y_test = train_test_split( X, y, test_size=0.1, random_state=2)
+                extractDf[name] = extractDf[name].apply(lambda x: ((x - calc[0]) * 1 / calc[1] + 0))
+        dropList = ['CAS','toxValue','logTox']
+        extractDf = extractDf.drop(columns=dropList)
+        return extractDf
 
+    X_train, X_test, y_train, y_test = train_test_split( X, y, test_size=0.1, random_state=2)
 
     def stacklearning(self):
         class extAverage(BaseEstimator, TransformerMixin,RegressorMixin):
@@ -191,13 +205,16 @@ class(object):
                 pass
 
             def fit(self, X, y=None):
+                result = np.average(X, axis = 1)
                 return self
 
             def transform(self, X):
                 return self
 
             def predict(self, X):
-                result = np.average(X, axis = 1)
+                print(X.shape)
+                result = (X[:,0]+X[:,1]*2+X[:,2]*0.5)/3.5
+                #result = np.average(X, axis = 1)
                 return result
         class extAll(BaseEstimator, TransformerMixin,RegressorMixin):
             def __init__(self):
@@ -207,8 +224,8 @@ class(object):
             def transform(self, X):
                 return self
             def predict(self, X):
-                maccs,_,descriptor,klekotaToth,newFingerprint=sepTables(X)
-                descriptor = pd.concat([maccs,descriptor,klekotaToth,newFingerprint],axis=1)
+                maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                descriptor = pd.concat([maccs,morgan,descriptor,klekotaToth,newFingerprint],axis=1)
                 return descriptor
 
         class extMorgan(BaseEstimator, TransformerMixin):
@@ -217,8 +234,8 @@ class(object):
             def fit(self, X, y=None):
                 return self
             def transform(self, X):
-                _,_,_,klekotaToth,newFingerprint=sepTables(X)
-                morgan = pd.concat([klekotaToth,newFingerprint],axis=1)
+                _,morgan,_,klekotaToth,newFingerprint=sepTables(X)
+                morgan = pd.concat([morgan,klekotaToth,newFingerprint],axis=1)
                 return morgan
         class extMACCS(BaseEstimator, TransformerMixin):
             def __init__(self):
@@ -226,10 +243,14 @@ class(object):
             def fit(self, X, y=None):
                 return self
             def transform(self, X):
-                maccs,_,_,klekotaToth,newFingerprint=sepTables(X)
-                maccs = pd.concat([maccs,klekotaToth,newFingerprint],axis=1)
+                maccs,morgan,_,klekotaToth,newFingerprint=sepTables(X)
+                maccs = pd.concat([maccs,morgan,klekotaToth,newFingerprint],axis=1)
 
                 return maccs
+            def predict(self, X):
+                maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                descriptor = pd.concat([maccs,morgan,klekotaToth,newFingerprint],axis=1)
+                return descriptor
 
         class extDescriptor(BaseEstimator, TransformerMixin):
             def __init__(self):
@@ -237,8 +258,8 @@ class(object):
             def fit(self, X, y=None):
                 return self
             def transform(self, X):
-                maccs,_,descriptor,klekotaToth,newFingerprint=sepTables(X)
-                descriptor = pd.concat([maccs,descriptor,klekotaToth,newFingerprint],axis=1)
+                maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                descriptor = pd.concat([maccs,morgan,descriptor,klekotaToth,newFingerprint],axis=1)
                 return descriptor
 
         class extPCA(BaseEstimator, TransformerMixin):
@@ -283,6 +304,7 @@ class(object):
         pipe6 = make_pipeline(extMACCS(), rgf)
         alldata = make_pipeline(extAll())
         ave = extAverage()
+        withoutdesc =  make_pipeline(extMACCS())
 
         meta = RandomForestRegressor(max_depth=20, random_state=0, n_estimators=400)
         #stack1 = StackingRegressor(regressors=[rgf, nbrs, alldata], meta_regressor=rgf, verbose=1)
@@ -294,8 +316,16 @@ class(object):
         #0.71######################
         stack1 = StackingRegressor(regressors=[pipe1,pipe2,pipe3], meta_regressor=rf, verbose=1)
         stack2 = StackingRegressor(regressors=[stack1,alldata,rgf,lgbm,xgb], meta_regressor=rf,verbose=1)
-        stack3 = StackingRegressor(regressors=[stack2,rf], meta_regressor=ave, verbose=1)
+        stack3 = StackingRegressor(regressors=[stack2,pipe1], meta_regressor=ave, verbose=1)
         ###########################
+        ##########################
+        stack1 = StackingRegressor(regressors=[pipe1,pipe2,pipe3], meta_regressor=rf, verbose=1)
+        stack2 = StackingRegressor(regressors=[stack1,withoutdesc,lgbm,rgf], meta_regressor=rf,verbose=1)
+        stack3 = StackingRegressor(regressors=[stack2,pipe1,xgb], meta_regressor=ave, verbose=1)
+        ###########################
+
+
+        #stack3 = StackingRegressor(regressors=[rgf, nbrs, alldata], meta_regressor=ave, verbose=1)
 
         cv = ShuffleSplit(n_splits=10, test_size=0.1, random_state=0)
         cv = KFold(n_splits=10, shuffle=True, random_state=0)
@@ -325,16 +355,36 @@ class(object):
         stack3.fit(X, y)
         y_pred = stack3.predict(X_train)
         y_val = stack3.predict(X_test)
-        stack3.score(X_train, y_train)
+        #stack3.score(X_train, y_train)
+        exX = preprocess(extractDf, changeList)
         valy =  (10 **(stack3.predict(exX))).tolist()
         print("Root Mean Squared Error train: %.4f" % calcRMSE(y_pred, y_train))
         print("Root Mean Squared Error test: %.4f" % calcRMSE(y_val, y_test))
         print('Correlation Coefficient train: %.4f' % calcCorr(y_pred, y_train))
         print('Correlation Coefficient test: %.4f' % calcCorr(y_val, y_test))
 
+        stack1.fit(X, y)
+        valy =  (10 **(stack1.predict(exX))).tolist()
+
+        sgd.fit(X,y)
+        valy =  (10 **(sgd.predict(exX))).tolist()
+
+        rgfpipe = make_pipeline(extMACCS(), rf)
+        rgf.fit(X,y)
+        valy =  (10 **(rgf.predict(exX))).tolist()
+
+        nbrs.fit(X,y)
+        valy =  (10 **(nbrs.predict(exX))).tolist()
+
+        pipe = make_pipeline(extMACCS(), rf)
+        pipe.fit(X,y)
+        valy =  (10 **(pipe.predict(exX))).tolist()
+
+
         rf.fit(X, y)
         y_pred = rf.predict(X_train)
         y_val = rf.predict(X_test)
+        exX = preprocess(extractDf, changeList)
         valy =  (10 **(rf.predict(exX))).tolist()
         print("Root Mean Squared Error train: %.4f" % calcRMSE(y_pred, y_train))
         print("Root Mean Squared Error test: %.4f" % calcRMSE(y_val, y_test))
@@ -342,8 +392,9 @@ class(object):
         print('Correlation Coefficient test: %.4f' % calcCorr(y_val, y_test))
 
         lgbm.fit(X, y)
-        y_pred = pipe1.predict(X_train)
-        y_val = pipe1.predict(X_test)
+        #y_pred = pipe1.predict(X_train)
+        #y_val = pipe1.predict(X_test)
+        exX = preprocess(extractDf, changeList)
         valy =  (10 **(lgbm.predict(exX))).tolist()
         print("Root Mean Squared Error train: %.4f" % calcRMSE(y_pred, y_train))
         print("Root Mean Squared Error test: %.4f" % calcRMSE(y_val, y_test))
