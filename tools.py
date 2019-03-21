@@ -727,6 +727,37 @@ class tools(object):
             tempdf = self.num2fingerprint(fps,cas)
             resultDf=pd.concat([resultDf,tempdf])
         resultDf.to_csv('klekotaRoth.csv', index=False)
+
+    def tanimotoHist(self, tanimotoDf):
+        import pylab as plt
+        zeros = int(tanimotoDf.shape[0] * tanimotoDf.shape[0] / 2) + 1 + tanimotoDf.shape[0]
+        dataCount = (tanimotoDf.shape[0] * tanimotoDf.shape[0]) / zeros
+        values = np.triu(tanimotoDf.values, k=1).flatten().tolist()
+        plotData = []
+        i = 1
+        for value in values:
+            if value == 0:
+                if i < zeros:
+                    i += 1
+                else:
+                    plotData.append(0)
+            elif value > 0:
+                a, _ = divmod(value, 0.005)
+                v = (a * 0.005 + 0.005)
+                plotData.append(round(v, 3))
+        fig, ax1 = plt.subplots()
+        ax1.hist(plotData, bins=100, density=True)
+        ax2 = ax1.twinx()
+        ax2.hist(plotData, bins=100, range=(0, 1), density=True, cumulative=True, histtype="step", color='r',
+                 linestyle="dotted")
+        ax_yticklocs = ax1.yaxis.get_ticklocs()
+        ax_yticklocs = list(map(lambda x: x * len(range(0, 1)) * 1.0 / 100, ax_yticklocs))
+        ax1.yaxis.set_ticklabels(list(map(lambda x: "%0.2f" % x, ax_yticklocs)))
+        plt.xlim([0, 1])
+        ax1.set_xlabel('Tanimoto Similarity')
+        ax2.set_ylabel('Cumulative Probability[%]', color='r')
+        ax1.set_ylabel('Probability Density[%]')
+        plt.show()
 if __name__ == '__main__':
     tool=tools()
 

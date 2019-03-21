@@ -410,7 +410,8 @@ class clustering(object):
         ax2 = ax1.twinx()
         ax2.hist(plotData,bins=100,range = (0,1),density=True,cumulative = True, histtype="step",color='r',linestyle="dotted")
         ax_yticklocs = ax1.yaxis.get_ticklocs()
-        ax_yticklocs = list(map(lambda x: x * len(range(0,1))* 1.0 / 100, ax_yticklocs))
+        #ax_yticklocs = list(map(lambda x: x * len(range(0,1))* 1.0 /100, ax_yticklocs))
+        ax_yticklocs = list(map(lambda x: x * len(range(0,1))* 1.0 , ax_yticklocs))
         ax1.yaxis.set_ticklabels(list(map(lambda x: "%0.2f" % x, ax_yticklocs)))
         plt.xlim([0,1])
         ax1.set_xlabel('Tanimoto Similarity')
@@ -418,12 +419,21 @@ class clustering(object):
         ax1.set_ylabel('Probability Density[%]')
         plt.show()
 
+    def filesearch(self):
+        import  glob
+        for name in glob.glob('*.py'):
+            with open(name, encoding="utf-8") as f:
+                a = f.read()
+                # print(a)
+                # print(a.find('hist'))
+                if a.find('Prob') > 0:
+                    print(name)
 
 if __name__ == '__main__':
     cl = clustering()
-    name = r'G:\マイドライブ\Data\Meram Chronic Data\cembleChronicMACCSKeys_tanimoto.csv'
+    #name = r'G:\マイドライブ\Data\Meram Chronic Data\cembleChronicMACCSKeys_tanimoto.csv'
     #name = "G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\MACCSKeys.csv"
-    #tanimotoDf = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\all_data\MACCSKeys_tanimoto.csv", engine='python',                           index_col='CAS')
+    tanimotoDf = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\all_data\MACCSKeys_tanimoto.csv", engine='python',                           index_col='CAS')
     tanimotoDf = pd.read_csv(name, engine='python', index_col='CAS')
     #df = cl.calcKmeans(name)
     #df = cl.calcFussyCMean(name)
@@ -473,6 +483,7 @@ if __name__ == '__main__':
             weightMean=[]
             if method == 'louvain' :
                 #setRange =  np.arange(0,1,0.002)
+                setRange = [0.83]
                 setRange = [0.83]
                 #setRange = np.arange(0.8, 0.6, -0.01)
             elif method == 'DBSCAN' :
