@@ -393,6 +393,7 @@ class clustering(object):
         zeros = int(tanimotoDf.shape[0]*tanimotoDf.shape[0]/2)+1 +tanimotoDf.shape[0]
         dataCount = (tanimotoDf.shape[0]*tanimotoDf.shape[0])/zeros
         values = np.triu(tanimotoDf.values, k=1).flatten().tolist()
+        #zeros = 0
         plotData = []
         i = 1
         for value in values:
@@ -400,6 +401,7 @@ class clustering(object):
                 if i < zeros:
                     i += 1
                 else:
+                    #pass
                     plotData.append(0)
             elif value > 0:
                 a,_ = divmod(value,0.005)
@@ -409,15 +411,27 @@ class clustering(object):
         ax1.hist(plotData,bins=100,density=True)
         ax2 = ax1.twinx()
         ax2.hist(plotData,bins=100,range = (0,1),density=True,cumulative = True, histtype="step",color='r',linestyle="dotted")
-        ax_yticklocs = ax1.yaxis.get_ticklocs()
+
+        # ax1_label
+        ax1_yticklocs = ax1.yaxis.get_ticklocs()
         #ax_yticklocs = list(map(lambda x: x * len(range(0,1))* 1.0 /100, ax_yticklocs))
-        ax_yticklocs = list(map(lambda x: x * len(range(0,1))* 1.0 , ax_yticklocs))
-        ax1.yaxis.set_ticklabels(list(map(lambda x: "%0.2f" % x, ax_yticklocs)))
+        ax1_yticklocs = list(map(lambda x: x * len(range(0,1))* 1.0 , ax1_yticklocs))
+        ax1.yaxis.set_ticklabels(list(map(lambda x: "%i" % x, ax1_yticklocs)))
+
+        # ax2_label
+        ax2_yticklocs = ax2.yaxis.get_ticklocs()
+        #ax_yticklocs = list(map(lambda x: x * len(range(0,1))* 1.0 /100, ax_yticklocs))
+        ax2_yticklocs = list(map(lambda x: x * len(range(0,1))* 100 , ax2_yticklocs))
+        ax2.yaxis.set_ticklabels(list(map(lambda x: "%i" % x, ax2_yticklocs)))
+
         plt.xlim([0,1])
-        ax1.set_xlabel('Tanimoto Similarity')
-        ax2.set_ylabel('Cumulative Probability[%]',color='r')
-        ax1.set_ylabel('Probability Density[%]')
+        ax1.set_xlabel('Tanimoto Similarity',fontsize=18)
+        ax2.set_ylabel('Cumulative Probability[%]',fontsize=18)
+        ax1.set_ylabel('Probability Density[%]',fontsize=18)
         plt.show()
+
+        countZero= len(np.where(vals == 0)[0])-tanimotoDf.shape[0]
+        print('ZERO ratio',countZero/(tanimotoDf.shape[0]*tanimotoDf.shape[0]))
 
     def filesearch(self):
         import  glob
