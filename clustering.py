@@ -445,9 +445,9 @@ class clustering(object):
 
 if __name__ == '__main__':
     cl = clustering()
-    #name = r'G:\マイドライブ\Data\Meram Chronic Data\cembleChronicMACCSKeys_tanimoto.csv'
+    name = r'G:\マイドライブ\Data\Meram Chronic Data\cembleChronicMACCSKeys_tanimoto.csv'
     #name = "G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\MACCSKeys.csv"
-    tanimotoDf = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\all_data\MACCSKeys_tanimoto.csv", engine='python',                           index_col='CAS')
+    #tanimotoDf = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\all_data\MACCSKeys_tanimoto.csv", engine='python',                           index_col='CAS')
     tanimotoDf = pd.read_csv(name, engine='python', index_col='CAS')
     #df = cl.calcKmeans(name)
     #df = cl.calcFussyCMean(name)
@@ -466,10 +466,10 @@ if __name__ == '__main__':
     LouvainDf = tanimotoDf.reset_index()
     LouvainDf.columns = range(LouvainDf.shape[1])
     #for method in ['meanshift']:
-    for method in ['louvain']:
+    #for method in ['louvain']:
     #for method in ['kmeans']:
     #for method in ['DBSCAN']:
-    #for method in ['HAC']:
+    for method in ['HAC']:
     #for method in ['spectral']:
     #for method in ['GMM','louvain','spectral','kmeans','HAC','DBSCAN','meanshift']:
     #for method in ['HAC','GMM']:
@@ -480,9 +480,9 @@ if __name__ == '__main__':
         # 99.7percentile(3σ）
         # threshold = 0.738
         #threshold = 0.5
-        #for threshold in [0.426,0.738,0.5,0.6,0.214]:
+        for threshold in [0.426,0.738,0.5,0.6,0.214]:
         #for threshold in [0.5,0.6,0.214]:
-        for threshold in [0.426]:
+        #for threshold in [0.426]:
         #for threshold in [0.738,0.5,0.214]:
             tanimotoMax = - np.inf
             tempMaxDf = None
