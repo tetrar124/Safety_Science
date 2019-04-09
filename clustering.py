@@ -445,10 +445,10 @@ class clustering(object):
 
 if __name__ == '__main__':
     cl = clustering()
-    name = r'G:\マイドライブ\Data\Meram Chronic Data\cembleChronicMACCSKeys_tanimoto.csv'
-    #name = "G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\MACCSKeys.csv"
-    #tanimotoDf = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\all_data\MACCSKeys_tanimoto.csv", engine='python',                           index_col='CAS')
-    tanimotoDf = pd.read_csv(name, engine='python', index_col='CAS')
+    #name = r'G:\マイドライブ\Data\Meram Chronic Data\cembleChronicMACCSKeys_tanimoto.csv'
+    name = "G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint\\MACCSKeys.csv"
+    tanimotoDf = pd.read_csv(r"G:\マイドライブ\Data\tox_predict\all_data\MACCSKeys_tanimoto.csv", engine='python',                           index_col='CAS')
+    #tanimotoDf = pd.read_csv(name, engine='python', index_col='CAS')
     #df = cl.calcKmeans(name)
     #df = cl.calcFussyCMean(name)
     #df = cl.calcDbscan(name)
@@ -526,7 +526,7 @@ if __name__ == '__main__':
                     df = cl.calcGMM(name,cluster)
                 #DBSCAN
                 elif method == 'DBSCAN':
-                    df = cl.calcDbscan(name,clusterc)
+                    df = cl.calcDbscan(name,cluster)
                 #kmeans
                 elif method == 'kmeans':
                     df = cl.calcKmeans(name,cluster)
