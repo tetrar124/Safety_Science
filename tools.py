@@ -777,6 +777,12 @@ class tools(object):
                 # print(a.find('hist'))
                 if a.find('Prob') > 0:
                     print(name)
+    def makeBins(self,plotData):
+        bins = np.arange(0,1.02,0.01)
+        labels = np.arange(0,1.01,0.01)
+        data = pd.cut(plotData,bins=bins,labels=labels,right=False).value_counts()
+
+
 if __name__ == '__main__':
     tool=tools()
 
@@ -788,7 +794,7 @@ if __name__ == '__main__':
 
     tool.fingertPrintFromSmiles('MACCSkeys')
 
-
+    pd.read_csv('')
     # os.chdir('G:\\マイドライブ\\Data\\tox_predict\\result\\fingerprint')
     # #df = pd.read_csv('G:\\マイドライブ\\Data\\tox_predict\\all_data\\clusterData_Louvain_cluster_08.csv',engine='python')
     # #tool.makeClusterPictures(df,strcture=None)
