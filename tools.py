@@ -781,6 +781,8 @@ class tools(object):
         bins = np.arange(0,1.02,0.01)
         labels = np.arange(0,1.01,0.01)
         data = pd.cut(plotData,bins=bins,labels=labels,right=False).value_counts()
+    def read_check(self):
+        df = pd.read_csv('extChronicData.csv', encoding='cp932')
 
 
 if __name__ == '__main__':
