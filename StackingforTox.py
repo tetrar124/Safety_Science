@@ -299,6 +299,7 @@ class(object):
         sgd = SGDRegressor(max_iter=1000)
         pls = PLSRegression(n_components=3)
         ext = ExtraTreesRegressor(n_estimators=30,max_features= 20,min_samples_split= 5,max_depth= 50, min_samples_leaf= 5)
+        extMACCSdata = make_pipeline(extMACCS())
 
         nbrsPipe = make_pipeline(extMorgan(), nbrs)
         pipe6 = make_pipeline(extMACCS(), rgf)
@@ -309,30 +310,40 @@ class(object):
         meta = RandomForestRegressor(max_depth=20, random_state=0, n_estimators=400)
         #stack1 = StackingRegressor(regressors=[rgf, nbrs, alldata], meta_regressor=rgf, verbose=1)
 
+        #0.70
         stack = StackingRegressor(regressors=[pipe1,pipe2,pipe3,xgb,lgbm,rgf,rf], meta_regressor=ave, verbose=1)
 
         #stack2 = StackingRegressor(regressors=[stack1,nbrs, svr,pls,rgf], meta_regressor=lgbm, verbose=1)
 
-        #0.71######################
+        #0.69######################
         stack1 = StackingRegressor(regressors=[pipe1,pipe2,pipe3], meta_regressor=rf, verbose=1)
+        #0.70
         stack2 = StackingRegressor(regressors=[stack1,alldata,rgf,lgbm,xgb], meta_regressor=rf,verbose=1)
+
+        #0.71
         stack3 = StackingRegressor(regressors=[stack2,pipe1], meta_regressor=ave, verbose=1)
         ###########################
-        ##########################
+        ###########################
         stack1 = StackingRegressor(regressors=[pipe1,pipe2,pipe3], meta_regressor=rf, verbose=1)
         stack2 = StackingRegressor(regressors=[stack1,withoutdesc,lgbm,rgf], meta_regressor=rf,verbose=1)
         stack3 = StackingRegressor(regressors=[stack2,pipe1,xgb], meta_regressor=ave, verbose=1)
         ###########################
+
+        #stackingwithknn
+        stack1 = StackingRegressor(regressors=[pipe1,pipe2,pipe3], meta_regressor=rf, verbose=1)
+        stack2 = StackingRegressor(regressors=[stack1,nbrs,pipe1], meta_regressor=rf, verbose=1)
 
 
         #stack3 = StackingRegressor(regressors=[rgf, nbrs, alldata], meta_regressor=ave, verbose=1)
 
         cv = ShuffleSplit(n_splits=10, test_size=0.1, random_state=0)
         cv = KFold(n_splits=10, shuffle=True, random_state=0)
+        St1Scores = cross_validate(stack1,X,y,cv=cv)
+        St1Scores['test_score'].mean()**(1/2)
 
         St2Scores = cross_validate(stack2,X,y,cv=cv)
         St2Scores['test_score'].mean()**(1/2)
-        St2Scores['test_score'].mean() ** (1 / 2)
+
         St3Scores = cross_validate(stack3,X,y,cv=cv)
         St3Scores['test_score'].mean()**(1/2)
 
