@@ -5,6 +5,7 @@ import os
 import sys
 import community
 import networkx as nx
+import pandas as pd
 
 class improvedLouvain(object):
     def __init__(self):
