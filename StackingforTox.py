@@ -30,6 +30,8 @@ from sklearn.decomposition import PCA
 
 from bayes_opt import BayesianOptimization
 
+
+
 class(object):
     ejectCAS = ['10124-36-4', '108-88-3', '111991-09-4', '116-29-0', '120-12-7', '126833-17-8', '13171-21-6',
                         '1333-82-0', '137-30-4', '148-79-8', '1582-09-8', '1610-18-0', '2058-46-0', '2104-64-5',
@@ -118,13 +120,15 @@ class(object):
             )
         opt.maximize(init_points=20,n_iter=100)
         opt.max
-
-    def calcRMSE(pred,real):
+    #make user evaluation method
+    def calcRMSE(real,pred):
       RMSE = (np.sum((pred-real.tolist())**2)/len(pred))**(1/2)
       return RMSE
-    def calcCorr(pred,real):
+    def calcCorr(real,pred):
       corr = np.corrcoef(real, pred.flatten())[0,1]
       return corr
+    from sklearn.metrics import make_scorer
+    myScoreFunc = {'RMSE':make_scorer(calcRMSE),'Correlation coefficient':make_scorer(calcCorr)}
 
     def sepTables(xdf=None):
         try:
@@ -153,7 +157,7 @@ class(object):
         #return tables[0],tables[1],tables[2],tables[3]
         return MACCS,Morgan,descriptors,klekotaToth,newFingerprint
     def main(self):
-        os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
+        #os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
         df =pd.read_csv(r'fishMorganMACCS.csv')
         #df2=pd.read_csv('chronicMACCSKeys_tanimoto.csv')
         #df2 = df2.drop(ejectCAS,axis=1).set_index('CAS').dropna(how='all', axis=1)
@@ -216,18 +220,144 @@ class(object):
                 result = (X[:,0]+X[:,1]*2+X[:,2]*0.5)/3.5
                 #result = np.average(X, axis = 1)
                 return result
+
+        class extPCA(BaseEstimator, TransformerMixin):
+            def __init__(self):
+                pass
+            def fit(self, X, y=None):
+                return self
+            def transform(self, X):
+                model = PCA(n_components=64)
+                _,morgan,_,_=sepTables(X)
+                morgan = morgan.reset_index().drop('index', axis=1)
+                W = pd.DataFrame(model.fit_transform(X))
+                W = pd.concat([morgan,W],axis=1)
+                return W
+
         class extAll(BaseEstimator, TransformerMixin,RegressorMixin):
             def __init__(self):
                 pass
             def fit(self, X, y=None):
                 return self
             def transform(self, X):
-                return self
+                maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                valiable = pd.concat([maccs,morgan,descriptor,klekotaToth,newFingerprint],axis=1)
+                return valiable
             def predict(self, X):
                 maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
                 descriptor = pd.concat([maccs,morgan,descriptor,klekotaToth,newFingerprint],axis=1)
                 return descriptor
+        #with new
+        class extdescriptorNew(BaseEstimator, TransformerMixin,RegressorMixin):
+            def __init__(self):
+                pass
+            def fit(self, X, y=None):
+                return self
+            def transform(self, X):
+                maccs, morgan, descriptor, klekotaToth, newFingerprint = sepTables(X)
+                descriptorNew = pd.concat([descriptor, newFingerprint], axis=1)
+                return descriptorNew
+            def predict(self, X):
+                maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                descriptorNew = pd.concat([descriptor,newFingerprint],axis=1)
+                return descriptorNew
 
+        class extMorganKlekotaTothNew(BaseEstimator, TransformerMixin):
+            def __init__(self):
+                pass
+            def fit(self, X, y=None):
+                return self
+            def transform(self, X):
+                _,morgan,_,klekotaToth,newFingerprint=sepTables(X)
+                three = pd.concat([morgan,klekotaToth,newFingerprint],axis=1)
+                return three
+            def predict(self, X):
+                _,morgan,_,klekotaToth,newFingerprint=sepTables(X)
+                three = pd.concat([morgan,klekotaToth,newFingerprint],axis=1)
+                return three
+
+        class extMorganNew(BaseEstimator, TransformerMixin):
+            def __init__(self):
+                pass
+            def fit(self, X, y=None):
+                return self
+            def transform(self,X):
+                _, morgan, _, klekotaToth, newFingerprint = sepTables(X)
+                morganAndNew = pd.concat([morgan, newFingerprint], axis=1)
+                return morganAndNew
+            def predict(self, X):
+                _,morgan,_,klekotaToth,newFingerprint=sepTables(X)
+                morganAndNew = pd.concat([morgan,newFingerprint],axis=1)
+                return morganAndNew
+
+        class extklekotaTothNew(BaseEstimator, TransformerMixin):
+            def __init__(self):
+                pass
+            def fit(self, X, y=None):
+                return self
+            def transform(self, X):
+                _,morgan,_,klekotaToth,newFingerprint=sepTables(X)
+                klekotaTothandandNew = pd.concat([klekotaToth,newFingerprint],axis=1)
+                return klekotaTothandandNew
+            def predict(self, X):
+                _,morgan,_,klekotaToth,newFingerprint=sepTables(X)
+                klekotaTothandandNew = pd.concat([klekotaToth,newFingerprint],axis=1)
+                return klekotaTothandandNew
+
+        class extMACCSNew(BaseEstimator, TransformerMixin,RegressorMixin):
+            def __init__(self):
+                pass
+            def fit(self, X, y=None):
+                return self
+            def transform(self, X):
+                maccs, morgan, descriptor, klekotaToth, newFingerprint = sepTables(X)
+                descriptorNew = pd.concat([maccs, newFingerprint], axis=1)
+                return descriptorNew
+            def predict(self, X):
+                maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                variable = pd.concat([maccs,newFingerprint],axis=1)
+                return variable
+        #with MACCS
+        class extMorganMACCS(BaseEstimator, TransformerMixin,RegressorMixin):
+            def __init__(self):
+                pass
+            def fit(self, X, y=None):
+                return self
+            def transform(self, X):
+                maccs, morgan, descriptor, klekotaToth, newFingerprint = sepTables(X)
+                variable = pd.concat([morgan,maccs],axis=1)
+                return variable
+            def predict(self, X):
+                maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                variable = pd.concat([morgan,maccs],axis=1)
+                return variable
+        class extKlekotaTothMACCS(BaseEstimator, TransformerMixin,RegressorMixin):
+            def __init__(self):
+                pass
+            def fit(self, X, y=None):
+                return self
+            def transform(self, X):
+                maccs, morgan, descriptor, klekotaToth, newFingerprint = sepTables(X)
+                variable = pd.concat([klekotaToth,maccs],axis=1)
+                return variable
+            def predict(self, X):
+                maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                variable = pd.concat([klekotaToth,maccs],axis=1)
+                return variable
+        class extDescriptorMACCS(BaseEstimator, TransformerMixin,RegressorMixin):
+            def __init__(self):
+                pass
+            def fit(self, X, y=None):
+                return self
+            def transform(self, X):
+                maccs, morgan, descriptor, klekotaToth, newFingerprint = sepTables(X)
+                variable = pd.concat([descriptor,maccs],axis=1)
+                return variable
+            def predict(self, X):
+                maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                variable = pd.concat([descriptor,maccs],axis=1)
+                return variable
+        #old
         class extMorgan(BaseEstimator, TransformerMixin):
             def __init__(self):
                 pass
@@ -237,6 +367,7 @@ class(object):
                 _,morgan,_,klekotaToth,newFingerprint=sepTables(X)
                 morgan = pd.concat([morgan,klekotaToth,newFingerprint],axis=1)
                 return morgan
+
         class extMACCS(BaseEstimator, TransformerMixin):
             def __init__(self):
                 pass
@@ -261,19 +392,51 @@ class(object):
                 maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
                 descriptor = pd.concat([maccs,morgan,descriptor,klekotaToth,newFingerprint],axis=1)
                 return descriptor
-
-        class extPCA(BaseEstimator, TransformerMixin):
+        #without new
+        class extAllwitoutNew(BaseEstimator, TransformerMixin):
             def __init__(self):
                 pass
             def fit(self, X, y=None):
                 return self
             def transform(self, X):
-                model = PCA(n_components=64)
-                _,morgan,_,_=sepTables(X)
-                morgan = morgan.reset_index().drop('index', axis=1)
-                W = pd.DataFrame(model.fit_transform(X))
-                W = pd.concat([morgan,W],axis=1)
-                return W
+                maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                variable = pd.concat([maccs,morgan,descriptor,klekotaToth],axis=1)
+                return variable
+
+        #only 1 fingerprint
+        class extOnlyDescriptor(BaseEstimator, TransformerMixin):
+            def __init__(self):
+                pass
+            def fit(self, X, y=None):
+                return self
+            def transform(self, X):
+                maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                return descriptor
+        class extOnlyMorgan(BaseEstimator, TransformerMixin):
+            def __init__(self):
+                pass
+            def fit(self, X, y=None):
+                return self
+            def transform(self, X):
+                maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                return morgan
+        class extOnlyklekotaToth(BaseEstimator, TransformerMixin):
+            def __init__(self):
+                pass
+            def fit(self, X, y=None):
+                return self
+            def transform(self, X):
+                maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                return klekotaToth
+        class extOnlyMACCS(BaseEstimator, TransformerMixin):
+            def __init__(self):
+                pass
+            def fit(self, X, y=None):
+                return self
+            def transform(self, X):
+                maccs,morgan,descriptor,klekotaToth,newFingerprint=sepTables(X)
+                return maccs
+
 
         lgbm = LGBMRegressor(boosting_type='gbdt', num_leaves=367,
                              learning_rate=0.06,feature_fraction=0.14,
@@ -284,6 +447,40 @@ class(object):
                            min_samples_leaf=2
                            )
         rf = RandomForestRegressor(max_depth=20, random_state=0, n_estimators=56,min_samples_split=2,max_features=0.21)
+
+        #test combination
+        desNew = make_pipeline(extdescriptorNew(),rf)
+        morNew = make_pipeline(extMorganNew(),rf)
+        kotNew = make_pipeline(extklekotaTothNew(),rf)
+        macNew = make_pipeline(extMACCSNew(),rf)
+
+        desMac = make_pipeline(extDescriptorMACCS(),rf)
+        morMac = make_pipeline(extMorganMACCS(),rf)
+        kotMac = make_pipeline(extKlekotaTothMACCS(),rf)
+
+        morKotNew = make_pipeline(extMorganKlekotaTothNew(),rf)
+        des = make_pipeline(extOnlyDescriptor(),rf)
+        mor = make_pipeline(extOnlyMorgan(),rf)
+        kot = make_pipeline(extOnlyklekotaToth(),rf)
+        mac = make_pipeline(extOnlyMACCS(),rf)
+        all = make_pipeline(extAll(),rf)
+        allwitoutNew = make_pipeline(extAllwitoutNew(),rf)
+
+        testDic = {"Desc+New":desNew,"Mor+New":morNew,"kot+New":kotNew,"MACCS+New":macNew,"Des+MAC":desMac,"Morgan+Maccs":morMac,"Kot+MACCS":kotMac,"mor+kot+New":morKotNew,
+        "descriptor":des,"morgan":mor,"kot":kot,"MACCS":mac,"All":all,"All without new":allwitoutNew}
+
+        #10fold
+        cv = KFold(n_splits=10, shuffle=True, random_state=0)
+        #test
+
+        resultDic={}
+        for name,model in testDic.items():
+            #model = StackingRegressor(regressors=[name], meta_regressor=rf,verbose=1)
+            Scores = cross_validate(model, X, y, cv=cv,scoring=myScoreFunc)
+            RMSETmp = Scores['test_RMSE'].mean()
+            CORRTmP = Scores['test_Correlation coefficient'].mean()
+            resultDic.update({name:[RMSETmp,CORRTmP]})
+            print(name,RMSETmp,CORRTmP)
 
         pipe1 = make_pipeline(extMACCS(), rf)
         pipe2 = make_pipeline(extMorgan(), rf)
