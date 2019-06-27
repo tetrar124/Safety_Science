@@ -542,6 +542,30 @@ class optimizeHyperparamerte(object):
         opt.maximize(init_points=20,n_iter=100)
         opt.max
 
+    def optRedge(self):
+        cv = KFold(n_splits=10, shuffle=True, random_state=0)
+        def forOptRidge( alpha):
+            score = cross_validate(
+                Ridge(
+                    alpha= alpha,
+                ),
+                X2, y,
+                scoring='neg_mean_squared_error',
+                cv=cv, n_jobs=-1)
+            val = score['test_score'].mean()
+            return val
+
+        opt = BayesianOptimization(
+            forOptRidge,{
+                'alpha':(10,1000)
+        }
+        )
+        opt.maximize(init_points=20, n_iter=100)
+        opt.max
+
+
+
+
 class toxPredict(object):
 
     os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
@@ -712,10 +736,19 @@ class toxPredict(object):
         nbrs = KNeighborsRegressor(3)
 
         ##Linear regressions
-        #SGD
-        sgd = SGDRegressor(max_iter=1000)
         #Stochastic Gradient Descenta
-        ridge = Ridge()
+        sgd = SGDRegressor(max_iter=1000)
+        # Ridge
+        for i in [1,10,100,1000]:
+            ridge = Ridge(alpha=i)
+            calcACC(ridge)
+        ridge = Ridge(alpha=45.50940042350705)
+        calcACC(ridge)
+        # multiple linear
+        lin = make_pipeline(forlinear(),LinearRegression(n_jobs=-1))
+        calcACC(lin)
+
+
 
         #stacking
         #0.69
@@ -730,11 +763,20 @@ class toxPredict(object):
         testmodel  = StackingRegressor(regressors=[alldata,stack1,stack1], meta_regressor=rf,verbose=1)
         #1.1535496740699531 0.7108839199109559
         pcaFeature = make_pipeline(extPCA())
-        testmodel = StackingRegressor(regressors=[pcaFeature,alldata,nbrs,all,xgb,lgbm,rgf]
+        testmodel = StackingRegressor(regressors=[pcaFeature,alldata,nbrs,rf,xgb,lgbm,rgf]
                                       ,meta_regressor=rf,verbose=1)
         #1.181801005432221 0.6889745579620922
-        testmodel = StackingRegressor(regressors=[pcaFeature,alldata,nbrs,all,xgb,lgbm,rgf]
+        testmodel = StackingRegressor(regressors=[pcaFeature,alldata,nbrs,rf,xgb,lgbm,rgf]
                                       ,meta_regressor=lgbm,verbose=1)
+        #0.70613
+        testmodel = StackingRegressor(regressors=[pcaFeature,alldata,nbrs,rf,xgb,lgbm,rgf,ext]
+                                      ,meta_regressor=xgb,verbose=1)
+        #
+        testmodel = StackingRegressor(regressors=[pcaFeature,alldata,nbrs,rf,xgb,lgbm,rgf,ext]
+                                      ,meta_regressor=rf,verbose=1)
+        #
+        testmodel = StackingRegressor(regressors=[pcaFeature,alldata,nbrs,ridge,rf,xgb,lgbm,rgf,ext]
+                                      ,meta_regressor=rf,verbose=1)
 
         #new features
         pcaFeature = make_pipeline(extPCA())
