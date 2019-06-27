@@ -512,11 +512,11 @@ class optimizeHyperparamerte(object):
             if kernel >=1 and kernel <= 10:
                 kernel = 'rbf'
             elif kernel > 11 and kernel <=20:
-                kernel = 'sigmoid'
+                kernel = 'linear'
             elif kernel >21 and kernel <=30:
-                kernel = 'poly'
+                kernel = 'sigmoid'
             else:
-                kernel ='linear'
+                kernel ='poly'
             score = cross_validate(
                 SVR(
                     kernel= kernel,
@@ -526,14 +526,14 @@ class optimizeHyperparamerte(object):
                 ),
                 X2, y,
                 scoring='neg_mean_squared_error',
-                cv=cv,n_jobs=-1)
+                cv=cv,n_jobs=1)
             val = score['test_score'].mean()
             return val
 
         opt = BayesianOptimization(
                 forOptSVR,
                 {
-                    'kernel':(31,40),
+                    'kernel':(1,20),
                     'gamma' :(2**(-20),2**11),
                     'epsilon':(2**(-10),2**1),
                     'C' :(2 **(-5),2**11)
@@ -771,10 +771,10 @@ class toxPredict(object):
         #0.70613
         testmodel = StackingRegressor(regressors=[pcaFeature,alldata,nbrs,rf,xgb,lgbm,rgf,ext]
                                       ,meta_regressor=xgb,verbose=1)
-        #
+        #0.71641717
         testmodel = StackingRegressor(regressors=[pcaFeature,alldata,nbrs,rf,xgb,lgbm,rgf,ext]
                                       ,meta_regressor=rf,verbose=1)
-        #
+        #0.7146922
         testmodel = StackingRegressor(regressors=[pcaFeature,alldata,nbrs,ridge,rf,xgb,lgbm,rgf,ext]
                                       ,meta_regressor=rf,verbose=1)
 
