@@ -526,14 +526,14 @@ class optimizeHyperparamerte(object):
                 ),
                 X2, y,
                 scoring='neg_mean_squared_error',
-                cv=cv,n_jobs=1)
+                cv=cv,n_jobs=-1)
             val = score['test_score'].mean()
             return val
 
         opt = BayesianOptimization(
                 forOptSVR,
                 {
-                    'kernel':(1,20),
+                    'kernel':(1,10),
                     'gamma' :(2**(-20),2**11),
                     'epsilon':(2**(-10),2**1),
                     'C' :(2 **(-5),2**11)
@@ -656,6 +656,11 @@ class toxPredict(object):
             min_samples_split= 0.01,max_depth= 856,
             min_samples_leaf= 1
         )
+        svr = SVR(
+            gamma=9.5367431640625e-07,
+            epsilon=0.0009765625,
+            C= 2048.0
+        )
 
         #test combination
         desNew = make_pipeline(extdescriptorNew(),rf)
@@ -714,7 +719,6 @@ class toxPredict(object):
         testmodel = StackingRegressor(regressors=[alldata], meta_regressor=rgf,verbose=1)
 
         #pls 22.808047774809697 0.6410026452910016 i=4
-        #set parameter
         for i in np.arange(3,11,1):
             pls = PLSRegression(n_components=i)
             testmodel = StackingRegressor(regressors=[alldata], meta_regressor=pls,verbose=0)
@@ -722,10 +726,11 @@ class toxPredict(object):
         pls = PLSRegression(n_components=4)
 
         #SVR
-        svr = SVR(gamma=9.5367431640625/10000000,kernel='linear',C=1559.4918100725592,
+        svr = SVR(gamma=9.5367431640625/10000000,C=1559.4918100725592,
                   epsilon=0.0009765625,)
+        svr = SVR(kernel='rbf',gamma=9.5367431640625e-07,epsilon=0.0009765625,C=2048.0)
 
-        #testmodel = StackingRegressor(regressors=[alldata], meta_regressor=svr, verbose=1)
+        testmodel = StackingRegressor(regressors=[alldata], meta_regressor=svr, verbose=1)
         calcACC(svr)
 
         #Extratree  1.157420824123527 0.7061010221224269
