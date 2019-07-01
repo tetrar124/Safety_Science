@@ -661,6 +661,27 @@ class toxPredict(object):
     X_train, X_test, y_train, y_test = train_test_split( X, y, test_size=0.1, random_state=2)
 
     def stacklearning(self):
+        class sparseNorm(BaseEstimator, TransformerMixin):
+            def __init__(self):
+                pass
+
+            def fit(self, X, y=None):
+                return self
+
+            def transform(self, X):
+                Y = normalize(sp.sparse.csc_matrix(X.values))
+                return Y
+        fm = sgd.FMRegression(
+            n_iter=4743,
+            init_stdev=0.1,
+            rank=100,
+            l2_reg_w=0,
+            l2_reg_V=0,
+            step_size=0.1,
+        )
+        pipe = make_pipeline(sparseNorm(), fm)
+        calcACC(pipe, X=X2)
+
         xgb = xgboost.XGBRegressor(
                     n_estimators=100,
                     max_depth=7,
