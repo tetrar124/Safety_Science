@@ -562,8 +562,39 @@ class optimizeHyperparamerte(object):
         )
         opt.maximize(init_points=20, n_iter=100)
         opt.max
+    #the value of step and stdev optimzation is very difficult
+    def oftFM(self):
+        from sklearn import preprocessing
+        sparseX = sp.sparse.csc_matrix(X2.values)
+        sparseX = preprocessing.normalize(sparseX)
+        def foroptFMRegression(n_iter,rank, l2_reg_w, l2_reg_V):
+            cv = KFold(n_splits=10, shuffle=True, random_state=0)
+            score = cross_validate(
+                    sgd.FMRegression(
+                    n_iter=n_iter,
+                    init_stdev=0.1,
+                    rank=int(rank),
+                    l2_reg_w=l2_reg_w,
+                    l2_reg_V=l2_reg_V,
+                    step_size=0.1,
+                ),
+                sparseX, y,
+                scoring='neg_mean_squared_error',
+                cv=cv,n_jobs=-1)
+            val = score['test_score'].mean()
+            return val
 
-
+        opt = BayesianOptimization(
+                foroptFMRegression,
+                {
+                    'n_iter': (1000,100000),
+                    'rank' : (1,100),
+                    'l2_reg_w':(0,10),
+                    'l2_reg_V':(0,10),
+                    }
+                )
+        opt.maximize(init_points=10,n_iter=100)
+        opt.max
 
 
 class toxPredict(object):
