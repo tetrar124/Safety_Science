@@ -669,7 +669,8 @@ class toxPredict(object):
                 return self
 
             def transform(self, X):
-                Y = normalize(sp.sparse.csc_matrix(X.values))
+                from sklearn import preprocessing
+                Y = preprocessing.normalize(sp.sparse.csc_matrix(X.values))
                 return Y
         fm = sgd.FMRegression(
             n_iter=4743,
@@ -677,6 +678,14 @@ class toxPredict(object):
             rank=100,
             l2_reg_w=0,
             l2_reg_V=0,
+            step_size=0.1,
+        )
+        fm = sgd.FMRegression(
+            n_iter=9943,
+            init_stdev=0.1,
+            rank=219,
+            l2_reg_w=0,
+            l2_reg_V=0.06454,
             step_size=0.1,
         )
         pipe = make_pipeline(sparseNorm(), fm)
