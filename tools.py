@@ -783,7 +783,28 @@ class tools(object):
         data = pd.cut(plotData,bins=bins,labels=labels,right=False).value_counts()
     def read_check(self):
         df = pd.read_csv('extChronicData.csv', encoding='cp932')
+    def drawhist(self):
+        from matplotlib import pyplot as plt
+        import matplotlib.font_manager
+        fontprop = matplotlib.font_manager.FontProperties(fname="/usr/share/fonts/truetype/times.ttf")
+        df = pd.read_csv(r'fishMorganMACCS.csv')
+        log = df['logTox']
+        val = df['toxValue']
 
+        fig, ax = plt.subplots(1, 1)
+        ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, loc: "{:,}".format(int(x))))
+
+        #normal
+        plt.hist(val, bins=100, range=(0, 1000))
+        #plt.ylim([0, 100])
+        plt.xlabel("Ecotoxicity", fontsize=15)
+
+        #log
+        plt.hist(log, bins=100,range=(-6,6))
+        plt.xlabel("Log Ecotoxicity", fontsize=15)
+
+        plt.ylabel("Count", fontsize=15)
+        plt.show()
 
 if __name__ == '__main__':
     tool=tools()
