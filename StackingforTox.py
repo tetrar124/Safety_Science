@@ -712,6 +712,7 @@ class toxPredict(object):
             n_estimators=56,min_samples_split=2,
             max_features=0.21
         )
+        rf = RandomForestRegressor()
         ext = ExtraTreesRegressor(
             n_estimators=384,max_features= 2228,
             min_samples_split= 0.01,max_depth= 856,
@@ -753,9 +754,12 @@ class toxPredict(object):
 
         #Fingerprinttest
         resultDic={}
+        resultDic2={}
         for name,model in testDic.items():
             #model = StackingRegressor(regressors=[name], meta_regressor=rf,verbose=1)
-            Scores = cross_validate(model, X, y, cv=cv,scoring=myScoreFunc)
+            #calcACC(model,X=X,y=y2,name=name)
+
+            Scores = cross_validate(model, X2, y2, cv=cv,scoring=myScoreFunc)
             RMSETmp = Scores['test_RMSE'].mean()
             CORRTmP = Scores['test_Correlation coefficient'].mean()
             resultDic.update({name:[RMSETmp,CORRTmP]})
@@ -1003,6 +1007,11 @@ if __name__ == '__main__':
     #df = df.set_index('CAS')
     #df = pd.concat([df,df2],axis=1, join_axes=[df.index]).reset_index()
     y = df['logTox']
+    # for name in df.columns:
+    #     a = re.search('ox', name)
+    #     if a != None:
+    #         print(name)
+    y2= df['toxValue']
     #dropList = ['CAS','toxValue','logTox','HDonor', 'HAcceptors', 'AromaticHeterocycles', 'AromaticCarbocycles', 'FractionCSP3']
     dropList = ['CAS','toxValue','logTox']
     X = df.drop(columns=dropList)
