@@ -785,25 +785,54 @@ class tools(object):
         df = pd.read_csv('extChronicData.csv', encoding='cp932')
     def drawhist(self):
         from matplotlib import pyplot as plt
-        import matplotlib.font_manager
-        fontprop = matplotlib.font_manager.FontProperties(fname="/usr/share/fonts/truetype/times.ttf")
+        import pandas as pd
         df = pd.read_csv(r'fishMorganMACCS.csv')
         log = df['logTox']
         val = df['toxValue']
 
-        fig, ax = plt.subplots(1, 1)
-        ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, loc: "{:,}".format(int(x))))
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['axes.xmargin'] = 0
+        plt.rcParams['axes.ymargin'] = 0
+
+
+        #inch settings
+
+        dpi=300
+        w=1063/dpi
+        h=532/dpi
+        fig = plt.figure(figsize=(w, h),dpi=dpi)
+        #fig = plt.figure(figsize=(5, 2.5))
+        #ax = fig.add_subplot(111)
+        ax1 = fig.add_subplot(1, 2, 1)
+        ax2 = fig.add_subplot(1, 2, 2)
+        ax1.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, loc: "{:,}".format(int(x))))
+        ax1.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, loc: "{:,}".format(int(x))))
+        ax2.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, loc: "{:,}".format(int(x))))
 
         #normal
-        plt.hist(val, bins=100, range=(0, 1000))
-        #plt.ylim([0, 100])
-        plt.xlabel("Ecotoxicity", fontsize=15)
+        ax1.hist(val, bins=200, range=(-20, 120))
+        ax1.set_ylim([0, 500])
+        ax1.set_xlabel("Ecotoxicity [mg/L]", fontsize=5)
 
         #log
-        plt.hist(log, bins=100,range=(-6,6))
-        plt.xlabel("Log Ecotoxicity", fontsize=15)
+        ax2.hist(log, bins=200,range=(-6,6))
+        ax2.set_ylim([0, 60])
+        ax2.set_xlabel("Log Ecotoxicity [mg/L]", fontsize=5)
 
-        plt.ylabel("Count", fontsize=15)
+        #common label
+        ax1.set_ylabel("Count", fontsize=5)
+        ax1.tick_params(labelsize=4,width=0.3)
+        ax2.tick_params(labelsize=4,width=0.3)
+        #axis width
+        axis = ['top', 'bottom', 'left', 'right']
+        line_width = [0.3,0.3, 0.3, 0.3]
+        for a, w in zip(axis, line_width):  # change axis width
+            ax1.spines[a].set_linewidth(w)
+            ax2.spines[a].set_linewidth(w)
+        #plt.subplots_adjust(left=0.045, bottom=0.03, right=0.75, top=0.55, wspace=0.1, hspace=0.15)
+        plt.savefig('log.jpg', bbox_inches='tight',dpi=dpi)
+        #plt.savefig('log.jpg', bbox_inches='tight',dpi=dpi)
+
         plt.show()
 
 if __name__ == '__main__':
