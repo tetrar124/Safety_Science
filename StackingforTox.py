@@ -638,7 +638,7 @@ class toxPredict(object):
         #return tables[0],tables[1],tables[2],tables[3]
         return MACCS,Morgan,descriptors,klekotaToth,newFingerprint
 
-    def calcACC(testmodel,X=X,name=None):
+    def calcACC(testmodel,X=X,name=None,y=y):
         def calcRMSE(real, pred):
             RMSE = (np.sum((pred - real.tolist()) ** 2) / len(pred)) ** (1 / 2)
             return RMSE
@@ -650,7 +650,7 @@ class toxPredict(object):
         myScoreFunc = {'RMSE': make_scorer(calcRMSE),
                        'Correlation coefficient': make_scorer(calcCorr)}
         cv = KFold(n_splits=10, shuffle=True, random_state=0)
-        Scores = cross_validate(testmodel, X, y, cv=cv, scoring=myScoreFunc)
+        Scores = cross_validate(testmodel, X, y, cv=cv, scoring=myScoreFunc,n_jobs=-1)
         RMSETmp = Scores['test_RMSE'].mean()
         CORRTmP = Scores['test_Correlation coefficient'].mean()
         trainRMSETmp = Scores['train_RMSE'].mean()
@@ -659,7 +659,55 @@ class toxPredict(object):
         print(name,'train',trainRMSETmp, trainCORRTmP)
 
     X_train, X_test, y_train, y_test = train_test_split( X, y, test_size=0.1, random_state=2)
+    #for acuete tox predicton
+    def metalPredict(self):
+        rf = RandomForestRegressor(
+            max_depth=20, random_state=0,
+            n_estimators=134,min_samples_split=9,
+            max_features=0.33
+        )
+        #test
+        #RMSE 10**1.048481123342563
+        #Coor 0.6585531363438192
+        #train
+        #RMSE 10**0.7063184454700483
+        #Coor 0.8793733707424819
+        rf = RandomForestRegressor()
+        #test
+        #RMSE 10**1.109618572731106
+        #Coor 0.6198791156669657
+        #train
+        #0.5647634395040055
+        #0.9179571547567322
 
+        os.chdir(r'G:\マイドライブ\Data\tox_predict')
+        df = pd.read_csv('metalMACCS.csv').set_index('CAS')
+        y= np.log10(df['tox_median'])
+        X = df.iloc[:,0:167]
+        calcACC(rf, X=X, name=None, y=y)
+    def predict(self):
+        predictCAS=['100-02-7','10102-18-8','10141-00-1','106-44-5','107-18-6','1071-83-6','108-05-4','108-46-3','110-80-5','118-96-7','122008-85-9','131-17-9','13593-03-8','141-66-2','151-50-8','177256-67-6','1918-02-1','918-16-7','1983-10-4','2425-06-1','2545-60-0','260-94-6','26027-38-3','26225-79-6','2893-78-9','300-76-5','31557-34-3','3383-96-8','34123-59-6','39515-41-8','51235-04-2','55-38-9','57-68-1','608-73-1','63-25-2','64-17-5','6515-38-4','66230-04-4','68-12-2','68951-67-7','70124-77-5','71-36-3','7173-51-5','74-83-9','74223-64-6','7446-20-0','7446-70-0','7646-79-9','7681-52-9','76930-58-0','7758-98-7','7782-50-5','7783-06-4','8003-34-7','87-65-0','877-43-0','9002-92-0','91-20-3','91465-08-6','94-09-7']
+        os.chdir(r'G:\マイドライブ\Data\tox_predict')
+        df = pd.read_csv('metalMACCS.csv').set_index('CAS')
+        y= np.log10(df['tox_median'])
+        X = df.iloc[:,0:167]
+
+        rf = RandomForestRegressor(
+            max_depth=20, random_state=0,
+            n_estimators=134,min_samples_split=9,
+            max_features=0.33
+        )
+
+        dfTest= df.loc[predictCAS].dropna()
+        test_y= dfTest['tox_median']
+        test_X = dfTest.iloc[:,0:167]
+
+        dfTrain = df.drop(index=dfTest.index)
+        train_y= np.log10(dfTrain['tox_median'])
+        train_X = dfTrain.iloc[:,0:167]
+        rf.fit(train_X,train_y)
+        predict= 10**(rf.predict(test_X))
+    def
     def stacklearning(self):
         class sparseNorm(BaseEstimator, TransformerMixin):
             def __init__(self):

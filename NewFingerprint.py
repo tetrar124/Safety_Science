@@ -79,7 +79,7 @@ def extSpecialTox(self):
                     else:
                         keys.append(0)
                 #電離
-                if smiles.count('.') > 0:
+                if smiles.count('\.') > 0:
                     keys.append(1)
                     print('金属', smiles, metalName)
                 else:

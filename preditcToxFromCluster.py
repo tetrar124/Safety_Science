@@ -633,19 +633,20 @@ class testCluster(object):
         df = df[['CAS', '化学物質名', '毒性値', '暴露時間（日）', '生物種', '栄養段階']]
         df2= df[df['化学物質名'].str.contains('hosphoric', na=False)]
     def checkNonspecificToxic(self):
-        os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
-        #os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
-        #df = pd.read_csv('G:\\マイドライブ\\Data\\tox_predict\\all_data\\allDataAcute.csv',engine='python',encoding='utf-8')
-        df = pd.read_csv('extChronicData.csv',engine='python',encoding='cp932')
+        #os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
+        os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
+        df = pd.read_csv('G:\\マイドライブ\\Data\\tox_predict\\all_data\\allDataAcute.csv',engine='python',encoding='utf-8')
+        #df = pd.read_csv('extChronicData.csv',engine='python',encoding='cp932')
         df = df[['CAS', '化学物質名', '毒性値', '暴露時間（日）', '生物種', '栄養段階']]
         #ランダム選択
-        dfOver20 = df['CAS'].value_counts() >20
-        len(df['CAS'].unique().tolist())
-        over20 = dfOver20[dfOver20 == True].index.tolist()
-        import random
-        random.seed(0)
-        select = random.sample(over20, 50)
-        exDfEpo = df[df['CAS'].isin(select)]
+        # dfOver20 = df['CAS'].value_counts() >20
+        # len(df['CAS'].unique().tolist())
+        # over20 = dfOver20[dfOver20 == True].index.tolist()
+        # import random
+        # random.seed(0)
+        # select = random.sample(over20, 50)
+        # exDfEpo = df[df['CAS'].isin(select)]
+
         #抽出例
         #CAS = df['CAS'][df['化学物質名'].str.contains('carbamic', na=False)].unique()
         # #エポキシ
@@ -694,19 +695,21 @@ class testCluster(object):
         #                             '584-79-2', '13510-49-1','944-22-9','1014-70-6', '13138-45-9',\
         #                              '2303-17-5', '10124-43-3', '11067-81-5','78-59-1','59-50-7'])]
         #exDfEpo = df[df['CAS'].isin(['64-17-5',         '7783-06-4',         '94-09-7',         '68951-67-7',         '71-36-3',         '68-12-2',         '131-17-9',         '91465-08-6',         '2425-06-1',         '8003-34-7',         '260-94-6',         '7646-79-9',         '608-73-1',         '106-44-5',         '55-38-9',         '151-50-8',         '26225-79-6',         '108-05-4',         '91-20-3',         '877-43-0',         '7173-51-5',         '3383-96-8',         '63-25-2',         '118-96-7',         '66230-04-4',         '110-80-5',         '7681-52-9',         '177256-67-6',         '1983-10-4',         '1918-02-1',         '2893-78-9',         '10102-18-8',         '7782-50-5',         '74223-64-6',         '7758-98-7',         '6515-38-4',         '34123-59-6',         '1918-16-7','122008-85-9','13593-03-8'])]
+
+        exDfEpo = df[df['CAS'].isin([])]
         exDfEpo = exDfEpo[['CAS', '化学物質名', '毒性値', '暴露時間（日）', '生物種', '栄養段階']]
-        exDfEpo.to_csv('verhaar.csv',encoding='utf-8')
+        exDfEpo.to_csv('metaltestTox.csv',encoding='utf-8')
         #names = exDfEpo['化学物質名'].unique()
 
         names = exDfEpo['CAS'].unique().tolist()
         #os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
-        #clusterDf = pd.read_csv('clusterData_Louvain_cluster_08.csv',engine='python',encoding='utf-8')
-        clusterDf = pd.read_csv('louvain_8071.0_150_th0.426.csv',engine='python',encoding='utf-8')
+        clusterDf = pd.read_csv('clusterData_Louvain_cluster_08.csv',engine='python',encoding='utf-8')
+        #clusterDf = pd.read_csv('louvain_8071.0_150_th0.426.csv',engine='python',encoding='utf-8')
         clusters = clusterDf[clusterDf['CAS'].isin(names)]
         exDfEpo.to_csv('epoxy.csv', encoding='utf-8')
         #谷本係数上位を抽出
-        #tanimotoDf = pd.read_csv('MACCSKeys_tanimoto.csv')
-        tanimotoDf = pd.read_csv('chronicMACCSKeys_tanimoto.csv')
+        tanimotoDf = pd.read_csv('MACCSKeys_tanimoto.csv')
+        #tanimotoDf = pd.read_csv('chronicMACCSKeys_tanimoto.csv')
         tanimotoDf = pd.melt(tanimotoDf, id_vars=['CAS']).dropna().sort_values('CAS')
         #普段は0.6、データが少ない場合は0.3
         tanimotoDf = tanimotoDf[tanimotoDf['value']>=0.6]
@@ -927,11 +930,10 @@ class testCluster(object):
                 sampleToxValues = pd.concat([sampleToxValues,tempDf])
          sampleToxValues.to_csv('069clusterTox.csv')
 
-
 if __name__ == '__main__':
-    #os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
-    os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
-    #df = pd.read_csv('MACCSKeys_tanimoto.csv')
+    os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
+    #os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
+    df = pd.read_csv('MACCSKeys_tanimoto.csv')
     #num = 1
     num = 1
     cl = testCluster()

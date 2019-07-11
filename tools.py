@@ -834,6 +834,95 @@ class tools(object):
         #plt.savefig('log.jpg', bbox_inches='tight',dpi=dpi)
 
         plt.show()
+    #金属化合物含有化合物の抽出
+    def extMetal(self):
+        import os
+        os.chdir(r'G:\マイドライブ\Data\tox_predict')
+        import pandas as pd
+        df = pd.read_csv('structure_result.csv')
+        metals = ['Li', 'Be', 'Na', 'Mg', 'Al', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni',
+                  'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo',
+                  'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'Cs', 'Ba',
+                  'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'Cr+6','\.']
+
+        extracts = ''
+        for metal in metals:
+            extract = df['canonical_smiles'].str.contains(metal).replace(np.nan,False)
+            extract=extract.tolist()
+            if extracts == '':
+                extracts = extract
+            else:
+                extracts =np.logical_or(extracts,extract)
+            print(metal)
+            for name in extract:
+                if name==True:
+                    print(name)
+        dfex=df[extracts]
+        dfex['canonical_smiles']
+
+    def fingertPrintFromSmiles(self,type='morgan'):
+        from rdkit import Chem
+        import pandas as pd
+        import os
+        from rdkit.Chem import MACCSkeys,AllChem
+        # os.chdir(r"G:\マイドライブ\Data\tox_predict\chemble")
+        # df = pd.read_csv('extractSmiles.csv',header=None)
+
+        os.chdir(r"G:\マイドライブ\Data\Meram Chronic Data")
+        df = pd.read_csv('extChronicStrcture.csv',engine='python')
+        df = df[['CAS', 'canonical_smiles']]
+        df = df.dropna(how='any')
+
+        #df = pd.read_csv('extractInchi.csv',header=None)
+        CAS = df['CAS']
+        SMILES =df['canonical_smiles']
+        i = 0
+        if type == 'MACCSkeys':
+            size = 167
+        elif type == 'morgan':
+            size = 512
+        columns =np.arange(0,size,1).tolist()
+        columns.insert(0, 'CAS')
+        baseDf = pd.DataFrame(columns=columns)
+
+        for cas,smiles in zip(CAS,SMILES):
+            print(smiles)
+            m = Chem.MolFromSmiles(smiles)
+            #m = Chem.MolFromInchi(smiles)
+            fingerprint = []
+            fingerprint.append(cas)
+            try:
+                if type =='MACCSkeys':
+                    fgp = MACCSkeys.GenMACCSKeys(m)
+                    for num in np.arange(0,size,1):
+                        num = int(num)
+                        if fgp.GetBit(num) == False:
+                            fingerprint.append(0)
+                        else:
+                            fingerprint.append(1)
+                    print(len(fingerprint))
+                elif type == 'morgan':
+                    fgp = AllChem.GetMorganFingerprintAsBitVect(m, 2, size)
+                    print(len(fgp))
+                    for num in np.arange(0,size,1):
+                        num = int(num)
+                        if fgp.GetBit(num) == False:
+                            fingerprint.append(0)
+                        else:
+                            fingerprint.append(1)
+                    print(len(fingerprint))
+                tempDf = pd.DataFrame([fingerprint], columns=columns)
+                baseDf = pd.concat([baseDf, tempDf])
+            except:
+                pass
+            i+=1
+            print(i)
+        toxvals = pd.read_csv('result_calc.csv')
+        toxvals=toxvals.set_index('CAS')
+        dfex= dfex.set_index('CAS')
+        baseDf = baseDf.set_index('CAS')
+
+        connectDf = pd.concat([baseDf,toxvals,dfex['canonical_smiles']],axis=1,join='inner')
 
 if __name__ == '__main__':
     tool=tools()

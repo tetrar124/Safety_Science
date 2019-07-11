@@ -187,7 +187,6 @@ if __name__ == '__main__':
     os.chdir(r'G:\マイドライブ\Data\Meram Chronic Data')
     testDf = pd.read_csv(r'G:\マイドライブ\Data\Meram Chronic Data\paraTest.csv',engine='python')
 
-
     df1 = pd.read_csv(r'G:\マイドライブ\Data\Meram Chronic Data\extChronicStrcture.csv',engine='python')
     df1 = df1[['CAS','isomeric_smiles']]
     df1 = df1.dropna(how='any')
