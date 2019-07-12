@@ -917,12 +917,46 @@ class tools(object):
                 pass
             i+=1
             print(i)
-        toxvals = pd.read_csv('result_calc.csv')
-        toxvals=toxvals.set_index('CAS')
+        os.chdir(r'D:\マイドライブ\Data\tox_predict')
+        dfex= pd.read_csv('metalMACCS.csv')
         dfex= dfex.set_index('CAS')
         baseDf = baseDf.set_index('CAS')
+        toxvals = pd.read_csv('result_calc.csv')
+        toxvals=toxvals.set_index('CAS')
+        samples = dfex.index
+        testDataMeltDf = pd.melt(dfex.reset_index(), id_vars=['CAS'])
 
+        os.chdir(r'D:\マイドライブ\Data\tox_predict\all_data')
+
+        os.chdir(r'D:\マイドライブ\Data\tox_predict')
+        dfex = pd.read_csv('metalMACCS.csv').set_index('CAS')
+        df = pd.read_csv('allData.csv',engine='python',encoding="UTF-8")
+        df = df.iloc[:,0:11]
+        df = df[df['毒性値']>=0]
+        toxValues = df
+        columnList = ['CAS','fish_tox','daphnia_tox','Algae_tox']
+        sampleToxValues =pd.DataFrame(columns=columnList)
+        #cass=['100-00-5', '100-01-6', '100-02-7']
+        cass =toxValues['CAS'].unique()
+        for cas in cass:
+            casDf=toxValues[toxValues['CAS']==cas]
+            toxValueList = [cas]
+            for name in ['魚類','ミジンコ類','藻類']:
+                targetToxValues = casDf[casDf['栄養段階']==name]
+                toxval=targetToxValues['毒性値'].median()
+                toxValueList.append(toxval)
+                #print(cas,name,toxval)
+            tempDf = pd.DataFrame([toxValueList],columns=columnList)
+            sampleToxValues = pd.concat([sampleToxValues,tempDf])
+        sampleToxValues = sampleToxValues.set_index('CAS')
+        dfex = dfex.set_index('CAS')
+        dfexMACCS = dfex.iloc[:,0:167]
+        connectDf = pd.concat([dfexMACCS,sampleToxValues],axis=1,join='inner')
+        connectDf = pd.concat([dfexMACCS,sampleToxValues,dfex['canonical_smiles']],axis=1,join='inner')
+
+        connectDf.to_csv('metalMACCS.csv')
         connectDf = pd.concat([baseDf,toxvals,dfex['canonical_smiles']],axis=1,join='inner')
+
 
 if __name__ == '__main__':
     tool=tools()

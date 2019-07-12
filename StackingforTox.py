@@ -650,7 +650,9 @@ class toxPredict(object):
         myScoreFunc = {'RMSE': make_scorer(calcRMSE),
                        'Correlation coefficient': make_scorer(calcCorr)}
         cv = KFold(n_splits=10, shuffle=True, random_state=0)
-        Scores = cross_validate(testmodel, X, y, cv=cv, scoring=myScoreFunc,n_jobs=-1)
+        #Scores = cross_validate(testmodel, X, y, cv=cv, scoring=myScoreFunc,n_jobs=-1)
+        Scores = cross_validate(testmodel, X, y, cv=cv, scoring=myScoreFunc)
+
         RMSETmp = Scores['test_RMSE'].mean()
         CORRTmP = Scores['test_Correlation coefficient'].mean()
         trainRMSETmp = Scores['train_RMSE'].mean()
@@ -682,23 +684,70 @@ class toxPredict(object):
 
         os.chdir(r'G:\マイドライブ\Data\tox_predict')
         df = pd.read_csv('metalMACCS.csv').set_index('CAS')
-        y= np.log10(df['tox_median'])
-        X = df.iloc[:,0:167]
-        calcACC(rf, X=X, name=None, y=y)
-    def predict(self):
-        predictCAS=['100-02-7','10102-18-8','10141-00-1','106-44-5','107-18-6','1071-83-6','108-05-4','108-46-3','110-80-5','118-96-7','122008-85-9','131-17-9','13593-03-8','141-66-2','151-50-8','177256-67-6','1918-02-1','918-16-7','1983-10-4','2425-06-1','2545-60-0','260-94-6','26027-38-3','26225-79-6','2893-78-9','300-76-5','31557-34-3','3383-96-8','34123-59-6','39515-41-8','51235-04-2','55-38-9','57-68-1','608-73-1','63-25-2','64-17-5','6515-38-4','66230-04-4','68-12-2','68951-67-7','70124-77-5','71-36-3','7173-51-5','74-83-9','74223-64-6','7446-20-0','7446-70-0','7646-79-9','7681-52-9','76930-58-0','7758-98-7','7782-50-5','7783-06-4','8003-34-7','87-65-0','877-43-0','9002-92-0','91-20-3','91465-08-6','94-09-7']
-        os.chdir(r'G:\マイドライブ\Data\tox_predict')
-        df = pd.read_csv('metalMACCS.csv').set_index('CAS')
-        y= np.log10(df['tox_median'])
-        X = df.iloc[:,0:167]
+        names = ['fish_tox','daphnia_tox','Algae_tox']
+        for name in names:
+            if name == 'fish_tox':
+                dftemp = df.drop(['daphnia_tox','Algae_tox'], axis=1)
+            elif name== 'daphnia_tox':
+                dftemp = df.drop(['fish_tox','Algae_tox'], axis=1)
+            elif name== 'Algae_tox':
+                dftemp = df.drop(['fish_tox','daphnia_tox'], axis=1)
+            print(name)
+            dftemp = dftemp.dropna()
+            y= np.log10(dftemp[name])
+            X = dftemp.iloc[:,0:167]
+            calcACC(rf, X=X, name=None, y=y)
 
+    def forPredict(self):
         rf = RandomForestRegressor(
             max_depth=20, random_state=0,
             n_estimators=134,min_samples_split=9,
             max_features=0.33
         )
+        os.chdir(r'G:\マイドライブ\Data\tox_predict')
 
-        dfTest= df.loc[predictCAS].dropna()
+        #predictCAS=['100-02-7','10102-18-8','10141-00-1','106-44-5','107-18-6','1071-83-6','108-05-4','108-46-3','110-80-5','118-96-7','122008-85-9','131-17-9','13593-03-8','141-66-2','151-50-8','177256-67-6','1918-02-1','918-16-7','1983-10-4','2425-06-1','2545-60-0','260-94-6','26027-38-3','26225-79-6','2893-78-9','300-76-5','31557-34-3','3383-96-8','34123-59-6','39515-41-8','51235-04-2','55-38-9','57-68-1','608-73-1','63-25-2','64-17-5','6515-38-4','66230-04-4','68-12-2','68951-67-7','70124-77-5','71-36-3','7173-51-5','74-83-9','74223-64-6','7446-20-0','7446-70-0','7646-79-9','7681-52-9','76930-58-0','7758-98-7','7782-50-5','7783-06-4','8003-34-7','87-65-0','877-43-0','9002-92-0','91-20-3','91465-08-6','94-09-7']
+
+        predictCAS = ['10022-68-1', '10043-52-4', '10045-89-3', '10099-74-8', '10124-43-3', '107-64-2', '1303-96-4', '1305-62-0', '1306-23-6', '1314-98-3', '1332-40-7', '13464-37-4', '142-71-2', '14338-32-0', '144550-36-7', '16903-35-8', '23149-52-2', '24307-26-4', '25606-41-1', '301-04-2', '3653-48-3', '37262-61-6', '3766-27-6', '38641-94-0', '43222-48-6', '541-09-3', '56-35-9', '57213-69-1', '6062-26-6', '6266-23-5', '631-61-8', '6369-97-7', '6515-38-4', '66330-88-9', '69-57-8', '7173-51-5', '71751-41-2', '7439-96-5', '7439-97-6', '7440-02-0', '7631-90-5', '7646-85-7', '7733-02-0', '7758-95-4', '7773-06-0', '7782-49-2', '7783-90-6', '85-34-7']
+
+        df = pd.read_csv('metalMACCS.csv').set_index('CAS')
+        names = ['fish_tox','daphnia_tox','Algae_tox']
+        for name in names:
+            if name == 'fish_tox':
+                dftemp = df.drop(['daphnia_tox','Algae_tox'], axis=1)
+            elif name== 'daphnia_tox':
+                dftemp = df.drop(['fish_tox','Algae_tox'], axis=1)
+            elif name== 'Algae_tox':
+                dftemp = df.drop(['fish_tox','daphnia_tox'], axis=1)
+            else:
+                pass
+            print(name)
+            dftemp = dftemp.dropna()
+            y= np.log10(dftemp[name])
+            X = dftemp.iloc[:,0:167]
+
+            dfTest= dftemp.loc[predictCAS]
+            test_y= dfTest[name]
+            test_X = dfTest.iloc[:,0:167]
+
+            dfTrain = dftemp.drop(index=dfTest.index)
+            train_y= np.log10(dfTrain[name])
+            train_X = dfTrain.iloc[:,0:167]
+            rf.fit(train_X,train_y)
+            predict= 10**(rf.predict(test_X))
+            for i in predict:
+                print(cas,i)
+
+    def sepData(self):
+        cv = KFold(n_splits=10, shuffle=True, random_state=0)
+        for train_index, test_index in cv.split(X, y):
+            print(train_index,test_index)
+        test_index = [1,10,12,15,21,37,75,76,78,90,96,107,135,141,144,159,186,188
+,198,220,233,235,236,240,245,272,282,289,306,313,315,317,326,329,339,345
+,346,351,352,354,382,387,405,414,420,430,436,469]
+        dfReset = df.reset_index().dropna()
+        dfTest= dfReset.loc[test_index].dropna()
+        dfTest = dfTest.set_index('CAS')
         test_y= dfTest['tox_median']
         test_X = dfTest.iloc[:,0:167]
 
@@ -707,7 +756,12 @@ class toxPredict(object):
         train_X = dfTrain.iloc[:,0:167]
         rf.fit(train_X,train_y)
         predict= 10**(rf.predict(test_X))
-    def
+        for i in predict:
+            print(i)
+        for i in dfTest.index:
+            print(i)
+        for i in test_y:
+            print(test_y)
     def stacklearning(self):
         class sparseNorm(BaseEstimator, TransformerMixin):
             def __init__(self):

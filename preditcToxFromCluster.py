@@ -31,6 +31,8 @@ class testCluster(object):
         else:
             pass
         print(df.shape)
+        os.chdir(r'D:\マイドライブ\Data\tox_predict\all_data')
+
         df2 = df.copy()
         df2['sum'] = df.sum(axis=1)
         df2 = df2[df2['sum'] != 0 ]
@@ -79,13 +81,13 @@ class testCluster(object):
         sampleToxValues.to_csv('targetToxValues.csv',index=False)
 
     def NewMergeCalcTox(self):
-        # df1 = pd.read_csv('clusterData_Louvain_cluster_08.csv')
-        # df2 = pd.read_csv('allData.csv')
+        df1 = pd.read_csv('clusterData_Louvain_cluster_08.csv')
+        df2 = pd.read_csv('allData.csv')
 
-        df1 = pd.read_csv('louvain_8071.0_150_th0.426.csv')
-        df2 = pd.read_csv('extChronicData.csv',encoding='cp932')
+        #df1 = pd.read_csv('louvain_8071.0_150_th0.426.csv')
+        #df2 = pd.read_csv('extChronicData.csv',encoding='cp932')
         #df2 = df2[df2['毒性値']!='繁殖']
-        #df2 = df2['毒性値'].astype(float)
+        #df2 = df2['毒性値'].astype(float)/
         #df2 = df2.drop(df2.index[df2['毒性値']<0])
         df2 = df2[df2['毒性値']>=0]
         toxValues = pd.merge(df1,df2,on = 'CAS',how = 'outer')
@@ -163,8 +165,8 @@ class testCluster(object):
 
         df3 = pd.read_csv('result.csv')
         df3.columns = ['targetCAS','CAS','TanimotoValue']
-        #df4 = pd.read_csv('clusterData_Louvain_cluster_08.csv')
-        df4 = pd.read_csv('louvain_8071.0_150_th0.426.csv')
+        df4 = pd.read_csv('clusterData_Louvain_cluster_08.csv')
+        #df4 = pd.read_csv('louvain_8071.0_150_th0.426.csv')
 
         nearClusterDf = pd.merge(df3,df4,how='left',on='CAS')
         nearClusterDf = pd.merge(nearClusterDf,sampleToxValues,how='left',on='cluster')
@@ -174,6 +176,7 @@ class testCluster(object):
 
         '''クラスタなし集計'''
         for target,cas,value,cluster in clusterNullDf[['targetCAS','CAS','TanimotoValue','cluster']].values:
+            print(target,cas,cluster)
             print(cas)
             toxValueList = []
             toxValuesTemp = toxValues[toxValues['CAS'] == cas]
@@ -237,7 +240,10 @@ class testCluster(object):
             print(toxValueList)
             tempCasDf = pd.DataFrame([toxValueList], columns=columnList)
             casToxDf = pd.concat([casToxDf, tempCasDf])
-        casToxDf = pd.concat([casToxDf, tempCasDf])
+        try:
+            casToxDf = pd.concat([casToxDf, tempCasDf])
+        except:
+            print('pass')
         nearClusterDf = nearClusterDf[np.isfinite(nearClusterDf['cluster'])]
         nearClusterDf = pd.concat([nearClusterDf,casToxDf]).sort_values(by='targetCAS')
         nearClusterDf = nearClusterDf.drop_duplicates()
@@ -308,8 +314,8 @@ class testCluster(object):
     def connectNames(self):
         nearClusterDf = pd.read_csv('predict08_.csv',engine='python')
         nearClusterDf = nearClusterDf.rename(columns ={'CAS':'similarStructureCAS'})
-        allData = pd.read_csv('extChronicData.csv',engine='python',encoding='cp932')
-        #allData = pd.read_csv('allData.csv',engine='python',encoding='utf-8')
+        #allData = pd.read_csv('extChronicData.csv',engine='python',encoding='cp932')
+        allData = pd.read_csv('allData.csv',engine='python',encoding='utf-8')
         casNumbers = nearClusterDf[['targetCAS','similarStructureCAS']].values.tolist()
         nameList = []
         for target,cas in casNumbers:
@@ -532,7 +538,7 @@ class testCluster(object):
         connectDf =connectDf.loc[:,columns]
         connectDf = connectDf.sort_values(['targetCAS','type'])
         #names= set(predictColumnsList) -set(targetColumsList)
-        connectDf.to_csv('predict.csv',index=False,encoding='utf-8')
+        connectDf.to_csv('predictMetal.csv',index=False,encoding='utf-8')
     def forKate(self):
         KateDf = pd.read_csv('Kate_result.csv').iloc[:,0:15]
         sepData = KateDf['95% Prediction Interval']
@@ -695,8 +701,8 @@ class testCluster(object):
         #                             '584-79-2', '13510-49-1','944-22-9','1014-70-6', '13138-45-9',\
         #                              '2303-17-5', '10124-43-3', '11067-81-5','78-59-1','59-50-7'])]
         #exDfEpo = df[df['CAS'].isin(['64-17-5',         '7783-06-4',         '94-09-7',         '68951-67-7',         '71-36-3',         '68-12-2',         '131-17-9',         '91465-08-6',         '2425-06-1',         '8003-34-7',         '260-94-6',         '7646-79-9',         '608-73-1',         '106-44-5',         '55-38-9',         '151-50-8',         '26225-79-6',         '108-05-4',         '91-20-3',         '877-43-0',         '7173-51-5',         '3383-96-8',         '63-25-2',         '118-96-7',         '66230-04-4',         '110-80-5',         '7681-52-9',         '177256-67-6',         '1983-10-4',         '1918-02-1',         '2893-78-9',         '10102-18-8',         '7782-50-5',         '74223-64-6',         '7758-98-7',         '6515-38-4',         '34123-59-6',         '1918-16-7','122008-85-9','13593-03-8'])]
-
-        exDfEpo = df[df['CAS'].isin([])]
+        test_cas = ['10022-68-1', '10043-52-4', '10045-89-3', '10099-74-8', '10124-43-3', '107-64-2', '1303-96-4', '1305-62-0', '1306-23-6', '1314-98-3', '1332-40-7', '13464-37-4', '142-71-2', '14338-32-0', '144550-36-7', '16903-35-8', '23149-52-2', '24307-26-4', '25606-41-1', '301-04-2', '3653-48-3', '37262-61-6', '3766-27-6', '38641-94-0', '43222-48-6', '541-09-3', '56-35-9', '57213-69-1', '6062-26-6', '6266-23-5', '631-61-8', '6369-97-7', '6515-38-4', '66330-88-9', '69-57-8', '7173-51-5', '71751-41-2', '7439-96-5', '7439-97-6', '7440-02-0', '7631-90-5', '7646-85-7', '7733-02-0', '7758-95-4', '7773-06-0', '7782-49-2', '7783-90-6', '85-34-7']
+        exDfEpo = df[df['CAS'].isin(test_cas)]
         exDfEpo = exDfEpo[['CAS', '化学物質名', '毒性値', '暴露時間（日）', '生物種', '栄養段階']]
         exDfEpo.to_csv('metaltestTox.csv',encoding='utf-8')
         #names = exDfEpo['化学物質名'].unique()
@@ -928,7 +934,7 @@ class testCluster(object):
                 #print(toxValueList)
                 tempDf = pd.DataFrame([toxValueList],columns=columnList)
                 sampleToxValues = pd.concat([sampleToxValues,tempDf])
-         sampleToxValues.to_csv('069clusterTox.csv')
+        sampleToxValues.to_csv('069clusterTox.csv')
 
 if __name__ == '__main__':
     os.chdir('G:\\マイドライブ\\Data\\tox_predict\\all_data')
