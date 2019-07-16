@@ -683,20 +683,26 @@ class toxPredict(object):
         #0.9179571547567322
 
         os.chdir(r'G:\マイドライブ\Data\tox_predict')
-        df = pd.read_csv('metalMACCS.csv').set_index('CAS')
-        names = ['fish_tox','daphnia_tox','Algae_tox']
-        for name in names:
-            if name == 'fish_tox':
-                dftemp = df.drop(['daphnia_tox','Algae_tox'], axis=1)
-            elif name== 'daphnia_tox':
-                dftemp = df.drop(['fish_tox','Algae_tox'], axis=1)
-            elif name== 'Algae_tox':
-                dftemp = df.drop(['fish_tox','daphnia_tox'], axis=1)
-            print(name)
-            dftemp = dftemp.dropna()
-            y= np.log10(dftemp[name])
-            X = dftemp.iloc[:,0:167]
-            calcACC(rf, X=X, name=None, y=y)
+        df1 = pd.read_csv('metalMACCS.csv').set_index('CAS')
+        df2 = pd.read_csv('metalECFP4.csv').set_index('CAS')
+        for i,df in enumerate([df1,df2]) :
+            names = ['fish_tox','daphnia_tox','Algae_tox']
+            if i == 0:
+                print('MACCS')
+            else:
+                print('ECFP4')
+            for name in names:
+                if name == 'fish_tox':
+                    dftemp = df.drop(['daphnia_tox','Algae_tox'], axis=1)
+                elif name== 'daphnia_tox':
+                    dftemp = df.drop(['fish_tox','Algae_tox'], axis=1)
+                elif name== 'Algae_tox':
+                    dftemp = df.drop(['fish_tox','daphnia_tox'], axis=1)
+                print(name)
+                dftemp = dftemp.dropna()
+                y = np.log10(dftemp[name])
+                X = dftemp.iloc[:,0:-1]
+                calcACC(rf, X=X, name=None, y=y)
 
     def forPredict(self):
         rf = RandomForestRegressor(

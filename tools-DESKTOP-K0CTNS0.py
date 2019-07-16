@@ -887,20 +887,19 @@ class tools(object):
 
         #acute
         os.chdir(r"G:\マイドライブ\Data\tox_predict")
-        df = pd.read_csv("metalMACCS.csv")
+        df = pd.read_csv("structure_result.csv")
 
         df = df[['CAS', 'canonical_smiles']]
         df = df.dropna(how='any')
         #df = pd.read_csv('extractInchi.csv',header=None)
         CAS = df['CAS']
         SMILES =df['canonical_smiles']
-        type = 'morgan'
+        type = 'MACCSkeys'
         i = 0
         if type == 'MACCSkeys':
             size = 167
         elif type == 'morgan':
-            #size = 512
-            size = 4096
+            size = 512
         columns =np.arange(0,size,1).tolist()
         columns.insert(0, 'CAS')
         baseDf = pd.DataFrame(columns=columns)
@@ -947,11 +946,11 @@ class tools(object):
         # samples = dfex.index
         # testDataMeltDf = pd.melt(dfex.reset_index(), id_vars=['CAS'])
 
-        # os.chdir(r'G:\マイドライブ\Data\tox_predict\all_data')
-        #
-        # os.chdir(r'G:\マイドライブ\Data\tox_predict')
+        os.chdir(r'D:\マイドライブ\Data\tox_predict\all_data')
 
-        #dfex = pd.read_csv('metalMACCS.csv').set_index('CAS')
+        os.chdir(r'D:\マイドライブ\Data\tox_predict')
+
+        dfex = pd.read_csv('metalMACCS.csv').set_index('CAS')
         dfex = baseDf
         df = pd.read_csv(r'G:\マイドライブ\Data\tox_predict\all_data\allData.csv',engine='python',encoding="UTF-8")
         df = df.iloc[:,0:11]
@@ -973,12 +972,12 @@ class tools(object):
             sampleToxValues = pd.concat([sampleToxValues,tempDf])
         sampleToxValues = sampleToxValues.set_index('CAS')
         dfex = dfex.set_index('CAS')
-        #dfexMACCS = dfex.iloc[:,0:-3]
-
-        connectDf = pd.concat([dfex,sampleToxValues],axis=1,join='inner')
+        dfexMACCS = dfex.iloc[:,0:167]
+        connectDf = pd.concat([dfexMACCS,sampleToxValues],axis=1,join='inner')
         #connectDf = pd.concat([dfexMACCS,sampleToxValues,dfex['canonical_smiles']],axis=1,join='inner')
 
         connectDf.to_csv('metalECFP4.csv')
+        connectDf = pd.concat([baseDf,toxvals,dfex['canonical_smiles']],axis=1,join='inner')
 
 
 if __name__ == '__main__':
