@@ -721,7 +721,7 @@ class toxPredict(object):
          '301-04-2', '3567-25-7', '4779-86-6', '569-64-2', '631-61-8', '6980-18-3', '7250-67-1',
          '7440-62-2', '7487-94-7', '7631-99-4', '76930-58-0', '7775-19-1', '7790-86-5', '7803-57-8',
          '79-57-2', '8065-48-3', '81510-83-0']
-        df = pd.read_csv('metalMACCS.csv').set_index('CAS')
+        df = pd.read_csv('metalMACCS.csv').set_index('CAS').drop(['canonical_smiles'],axis=1)
         names = ['fish_tox','daphnia_tox','Algae_tox']
         for name in names:
             if name == 'fish_tox':
@@ -735,21 +735,38 @@ class toxPredict(object):
             print(name)
 
             y= np.log10(dftemp[name])
-            X = dftemp.iloc[:,0:167]
+            X = dftemp.iloc[:,0:-1]
 
             dfTest= dftemp.loc[predictCAS]
             #dfTest = dfTest.dropna()
             test_y= dfTest[name]
-            test_X = dfTest.iloc[:,0:167]
+            test_X = dfTest.iloc[:,0:-1]
 
             dfTrain = dftemp.drop(index=dfTest.index)
             dfTrain = dfTrain.dropna()
             train_y= np.log10(dfTrain[name])
-            train_X = dfTrain.iloc[:,0:167]
+            train_X = dfTrain.iloc[:,0:-1]
             rf.fit(train_X,train_y)
             predict= 10**(rf.predict(test_X))
             for i,j in zip(test_X.index,predict):
                 print(i,j)
+            feature = rf.feature_importances_
+            f = pd.DataFrame({'number': range(0, len(feature)),
+                              'feature': feature[:]})
+            dpi=300
+            plt.bar(f['number'], f['feature']*100,color='#377eb8')
+            plt.rcParams['font.family'] = 'Times New Roman'
+            plt.savefig(r'C:\onedrive\01Doctor\論文\和文論文\kiyo.tiff', bbox_inches='tight', dpi=dpi)
+            plt.show()
+            f2 = f.sort_values('feature', ascending=False)
+            f3 = f2.loc[:, 'number']
+
+
+
+
+            morgan_turples = ((taxol, bit, bitI_morgan) for bit in list(bitI_morgan.keys())[:12])
+            Draw.DrawMorganBits(morgan_turples, molsPerRow=4,
+                                legends=['bit: ' + str(x) for x in list(bitI_morgan.keys())[:12]])
 
     def sepData(self):
         cv = KFold(n_splits=10, shuffle=True, random_state=0)
