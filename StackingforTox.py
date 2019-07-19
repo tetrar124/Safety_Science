@@ -406,7 +406,7 @@ class optimizeHyperparamerte(object):
                     gamma=gamma,
                     colsample_bytree=colsample_bytree,
                 ),
-                X2, y,
+                X, y,
                 scoring='neg_mean_squared_error',
                 cv=cv,n_jobs=-1)
             val = score['test_score'].mean()
@@ -414,8 +414,8 @@ class optimizeHyperparamerte(object):
         opt = BayesianOptimization(
                 xgboost_cv,
                 {
-                    'n_estimators':(5,100),
-                    'max_depth': (7, 100),
+                    'n_estimators':(5,10000),
+                    'max_depth': (3, 1000),
                     'gamma': (0,2),
                     'colsample_bytree': (0.1, 1)
                 }
@@ -668,6 +668,34 @@ class toxPredict(object):
             n_estimators=134,min_samples_split=9,
             max_features=0.33
         )
+        xg=xgboost.XGBRegressor(
+            n_estimators=100,
+            max_depth=7,
+            gamma=0.0,
+            colsample_bytree=1,
+        )
+
+        lgbm = LGBMRegressor(
+            boosting_type='gbdt',
+            num_leaves=662,
+            feature_fraction= 0.36875625810601625,
+            bagging_fraction=0.39668072810414723,
+            learning_rate=0.06,
+            min_data_in_leaf=35,
+            max_depth=27
+        )
+
+        rgf = RGFRegressor(
+            max_leaf=1998,
+            algorithm="RGF",
+            test_interval=100,
+            loss="LS",
+            verbose=False,
+            l2=0.187,
+            min_samples_leaf=1
+        )
+
+        os.chdir(r'G:\マイドライブ\Data\tox_predict')
         #test
         #RMSE 10**1.048481123342563
         #Coor 0.6585531363438192
@@ -682,7 +710,7 @@ class toxPredict(object):
         #0.5647634395040055
         #0.9179571547567322
 
-        os.chdir(r'G:\マイドライブ\Data\tox_predict')
+
         df1 = pd.read_csv('metalMACCS.csv').set_index('CAS')
         df2 = pd.read_csv('metalECFP4.csv').set_index('CAS')
         for i,df in enumerate([df1,df2]) :
@@ -703,7 +731,65 @@ class toxPredict(object):
                 y = np.log10(dftemp[name])
                 X = dftemp.iloc[:,0:-1]
                 calcACC(rf, X=X, name=None, y=y)
+    def metalPredictotherML(self):
+        rf = RandomForestRegressor(
+            max_depth=20, random_state=0,
+            n_estimators=134,min_samples_split=9,
+            max_features=0.33
+        )
+        xg=xgboost.XGBRegressor(
+            n_estimators=9196,
+            max_depth=497,
+            gamma=0.0,
+            colsample_bytree= 1
+        )
 
+        lgbm = LGBMRegressor(
+            boosting_type='gbdt',
+            num_leaves=662,
+            feature_fraction= 0.36875625810601625,
+            bagging_fraction=0.39668072810414723,
+            learning_rate=0.06,
+            min_data_in_leaf=35,
+            max_depth=27
+        )
+
+        rgf = RGFRegressor(
+            max_leaf=1998,
+            algorithm="RGF",
+            test_interval=100,
+            loss="LS",
+            verbose=False,
+            l2=0.187,
+            min_samples_leaf=1
+        )
+        from sklearn import linear_model
+        clf = linear_model.LogisticRegression(random_state=0)
+        ml = LinearRegression(n_jobs=-1)
+        [rf,xg,lgbm,rgf,ml]
+
+        #test
+        #RMSE 10**1.048481123342563
+        #Coor 0.6585531363438192
+        #train
+        #RMSE 10**0.7063184454700483
+        #Coor 0.8793733707424819
+        rf = RandomForestRegressor()
+        #test
+        #RMSE 10**1.109618572731106
+        #Coor 0.6198791156669657
+        #train
+        #0.5647634395040055
+        #0.9179571547567322
+
+        os.chdir(r'G:\マイドライブ\Data\tox_predict')
+        df = pd.read_csv('metalMACCS.csv').set_index('CAS')
+        dftemp = df.drop(['daphnia_tox','Algae_tox'], axis=1)
+        dftemp = dftemp.dropna()
+        y = np.log10(dftemp['fish_tox'])
+        X = dftemp.iloc[:,0:-2]
+        for i in [rf,xg,lgbm,rgf,ml]:
+            calcACC(i, X=X, name=i, y=y)
     def forPredict(self):
         rf = RandomForestRegressor(
             max_depth=20, random_state=0,
