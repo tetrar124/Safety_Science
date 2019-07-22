@@ -743,7 +743,12 @@ class toxPredict(object):
             gamma=0.0,
             colsample_bytree= 1
         )
-
+        xg=xgboost.XGBRegressor(
+            n_estimators=7534,
+            max_depth=1000,
+            gamma=2.0,
+            colsample_bytree= 0.1
+        )
         lgbm = LGBMRegressor(
             boosting_type='gbdt',
             num_leaves=662,
@@ -831,8 +836,13 @@ class toxPredict(object):
             dfTrain = dftemp.drop(index=dfTest.index)
             dfTrain = dfTrain.dropna()
             train_y= np.log10(dfTrain[name])
+            train_yInv = 1/ dfTrain[name]
+            rf.fit(train_X,train_yInv)
+            train_yNormal = dfTrain[name]
+            rf.fit(train_X,train_yNormal)
             train_X = dfTrain.iloc[:,0:-1]
             rf.fit(train_X,train_y)
+
             predict= 10**(rf.predict(test_X))
             for i,j in zip(test_X.index,predict):
                 print(i,j)
@@ -842,12 +852,13 @@ class toxPredict(object):
             dpi=300
             plt.bar(f['number'], f['feature']*100,color='#377eb8')
             plt.rcParams['font.family'] = 'Times New Roman'
-            plt.savefig(r'C:\onedrive\01Doctor\論文\和文論文\kiyo.tiff', bbox_inches='tight', dpi=dpi)
+            plt.savefig(r'C:\onedrive\01Doctor\論文\和文論文\kiyonorm.tiff', bbox_inches='tight', dpi=dpi)
             plt.show()
+            f['feature'] = f['feature']*100
             f2 = f.sort_values('feature', ascending=False)
             f3 = f2.loc[:, 'number']
 
-
+            featureInverse =
 
 
             morgan_turples = ((taxol, bit, bitI_morgan) for bit in list(bitI_morgan.keys())[:12])
