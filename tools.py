@@ -979,6 +979,26 @@ class tools(object):
         #connectDf = pd.concat([dfexMACCS,sampleToxValues,dfex['canonical_smiles']],axis=1,join='inner')
 
         connectDf.to_csv('metalECFP4.csv')
+    def extKeysAndtox(self):
+        import pandas as pd
+        import os
+        cd os.chdir('C:\OneDrive\公開\tox共有\acute')
+        df = pd.read_csv(r'metalMACCS.csv')
+        dfresult = pd.DataFrame()
+        keys = []
+        toxValues = []
+        for key in ['12','159','35','128','10','3','146','125','148','129']:
+            dftemp = df[df[key]==1]
+            dftemp= dftemp['fish_tox']
+
+            for value in dftemp.tolist():
+                keys.append(key)
+                toxValues.append(value)
+        import seaborn as sns
+        box = sns.boxplot(x=keys, y=toxValues)
+        axes = box.axes
+        axes.set_ylim(0,1000)
+
 
 
 if __name__ == '__main__':
