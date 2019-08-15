@@ -992,12 +992,37 @@ class tools(object):
             dftemp= dftemp['fish_tox']
 
             for value in dftemp.tolist():
-                keys.append(key)
+                keys.append(key+' Bit')
                 toxValues.append(value)
         import seaborn as sns
         box = sns.boxplot(x=keys, y=toxValues)
         axes = box.axes
         axes.set_ylim(0,1000)
+
+        keys2 = []
+        toxValues2 = []
+        for key in ['10','136','39','36','42','35','58','15','134','50','40']:
+            dftemp = df[df[key]==1]
+            dftemp= dftemp['fish_tox']
+
+            for value in dftemp.tolist():
+                keys2.append(key+' Bit')
+                toxValues2.append(value)
+        import seaborn as sns
+        box2 = sns.boxplot(x=keys2, y=toxValues2)
+        axes2 = box2.axes
+        axes2.set_ylim(0,1000)
+    def checkSize(self):
+        #metal
+        #23866, 580
+        import os
+        import pandas as pd
+        os.chdir(r'C:\OneDrive\公開\tox共有\acute')
+        df = pd.read_csv(r'metalMACCS.csv')
+        os.chdir(r'G:\マイドライブ\Data\tox_predict\all_data')
+        df2 = pd.read_csv(r'allDataAcute.csv')
+        metaldata   = df2[df2['CAS'].isin(df['CAS'])]
+        metaldata.shape
 
 
 
