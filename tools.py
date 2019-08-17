@@ -982,9 +982,10 @@ class tools(object):
     def extKeysAndtox(self):
         import pandas as pd
         import os
-        cd os.chdir('C:\OneDrive\公開\tox共有\acute')
+        import pylab as plt
+        os.chdir(r'C:\OneDrive\公開\tox共有\acute')
         df = pd.read_csv(r'metalMACCS.csv')
-        dfresult = pd.DataFrame()
+
         keys = []
         toxValues = []
         for key in ['12','159','35','128','10','3','146','125','148','129']:
@@ -992,21 +993,27 @@ class tools(object):
             dftemp= dftemp['fish_tox']
 
             for value in dftemp.tolist():
-                keys.append(key+' Bit')
+                keys.append('Bit' + key)
                 toxValues.append(value)
         import seaborn as sns
+        import numpy as np
         box = sns.boxplot(x=keys, y=toxValues)
+        plt.rcParams['font.family'] = 'Times New Roman'
+        igfont = {'family':  'Times New Roman'}
+        plt.ylabel('Ecotoxicity [mg/L]', **igfont)
+        plt.xlabel('The bit of MACCS Keys', **igfont)
         axes = box.axes
         axes.set_ylim(0,1000)
 
         keys2 = []
         toxValues2 = []
         for key in ['10','136','39','36','42','35','58','15','134','50','40']:
-            dftemp = df[df[key]==1]
+        #for key in np.arange(0,166,1):
+            dftemp = df[df[str(key)]==1]
             dftemp= dftemp['fish_tox']
 
             for value in dftemp.tolist():
-                keys2.append(key+' Bit')
+                keys2.append(str(key)+' Bit')
                 toxValues2.append(value)
         import seaborn as sns
         box2 = sns.boxplot(x=keys2, y=toxValues2)

@@ -824,7 +824,7 @@ class toxPredict(object):
             else:
                 pass
             print(name)
-
+            name ='fish_tox'
             y= np.log10(dftemp[name])
             X = dftemp.iloc[:,0:-1]
 
@@ -835,7 +835,8 @@ class toxPredict(object):
 
             dfTrain = dftemp.drop(index=dfTest.index)
             dfTrain = dfTrain.dropna()
-            train_y= np.log10(dfTrain[name])
+            train_y = np.log10(dfTrain[name])
+            train_X = dfTrain.drop(name,axis=1)
             train_yInv = 1/ dfTrain[name]
             rf.fit(train_X,train_yInv)
             train_yNormal = dfTrain[name]
@@ -853,6 +854,11 @@ class toxPredict(object):
             plt.bar(f['number'], f['feature']*100,color='#377eb8')
             plt.rcParams['font.family'] = 'Times New Roman'
             plt.savefig(r'C:\onedrive\01Doctor\論文\和文論文\kiyonorm.tiff', bbox_inches='tight', dpi=dpi)
+            plt.rcParams['font.family'] = 'Times New Roman'
+            igfont = {'family': 'Times New Roman'}
+            plt.ylabel('Ecotoxicity [mg/L]', **igfont)
+            plt.xlabel('The bit of MACCS Keys', **igfont)
+
             plt.show()
             f['feature'] = f['feature']*100
             f2 = f.sort_values('feature', ascending=False)
